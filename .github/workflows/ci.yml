@@ -1,63 +1,62 @@
 name: CI
 
-on:
-  push:
-    branches: [master]
-  pull_request:
-    branches: [master]
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+on:
+  push: { branches: [master] }
+  pull_request: { branches: [master] }
+
 jobs:
-  lint:
-    name: Lint & format check
+  pre-commit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pre-commit/action@v3.0.1
 
-      - uses: prefix-dev/setup-pixi@v0.9.3
-        with:
-          pixi-version: latest
-          manifest-path: pyproject.toml
-          environments: ci-cpu-py312
-          cache: true
-
-      - name: Lint & format check
-        run: pixi run --environment ci-cpu-py312 lint-check
-
-  test:
-    name: Test (Python ${{ matrix.python-version }})
+  test-matrix:
+    name: Test (py${{ matrix.python-version }})
+    needs: pre-commit
     runs-on: ubuntu-latest
-    needs: lint
+
+    env:
+      PIXI_ENV: ci-cpu-py${{ matrix.python-version }}
+
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - python-version: "3.11"
-            environment: ci-cpu-py311
-          - python-version: "3.12"
-            environment: ci-cpu-py312
-          - python-version: "3.13"
-            environment: ci-cpu-py313
+        python-version: ["311", "312", "313"]
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: prefix-dev/setup-pixi@v0.9.3
+      - name: Setup pixi
+        uses: prefix-dev/setup-pixi@v0.9.3
         with:
-          pixi-version: latest
-          manifest-path: pyproject.toml
-          environments: ${{ matrix.environment }}
+          pixi-version: v0.63.2
           cache: true
+          environments: ${{ env.PIXI_ENV }}
 
       - name: Run tests
-        run: pixi run --environment ${{ matrix.environment }} test
+        run: pixi run -e "${{ env.PIXI_ENV }}" test
 
-      - name: Upload coverage
+      - name: CodeCov
         uses: codecov/codecov-action@v4
-        if: matrix.python-version == '3.12'
+        if: matrix.python-version == '312'
         with:
           files: coverage.xml
           fail_ci_if_error: false
+
+  test:
+    needs: test-matrix
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check test matrix result
+        run: |
+          if [[ "${{ needs.test-matrix.result }}" != "success" ]]; then
+            echo "One or more test matrix jobs failed or were cancelled."
+            exit 1
+          fi
+
