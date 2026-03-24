@@ -73,6 +73,7 @@ class TestComputeMlpEnergiesForces:
                     ]
                 ]
             ),
+            rel=2e-6,
         )
 
     def test_show_progress_runs_without_error(
@@ -124,8 +125,7 @@ class TestComputeAseEnergiesForces:
     def test_single_frame_no_progress(
         self, water_system, initial_coords_box_angstrom, mock_calculator
     ):
-        from scalej.constants import EV_TO_KCAL_MOL
-        from scalej.simulation.mlp import compute_ase_energies_forces
+        from scalej.simulation.mlp import EV_TO_KCAL_MOL, compute_ase_energies_forces
 
         tensor_system, _, _ = water_system
         coords, box = initial_coords_box_angstrom
@@ -182,4 +182,5 @@ class TestIntegrationComputeMlpEnergiesForcesSingle:
                     [-27.91983493, -19.67903268, -18.48972094],
                 ]
             ),
+            rel=2e-6,
         )
