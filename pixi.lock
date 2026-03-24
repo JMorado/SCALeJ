@@ -417,9 +417,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zlib-ng-2.3.3-hceb46e0_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstandard-0.25.0-py311haee01d2_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb78ec9c_6.conda
+      - pypi: git+https://github.com/jmorado/descent.git?branch=feature_periodic_systems#0da9ecd56fbc89f1aec2e0b583f662059f2ada78
       - pypi: git+https://github.com/openforcefield/smee.git#0d0b42d2096b27ea518bc24c18979b40de5ce93e
       - pypi: ./
-      - pypi: /home/joaomorado/repos/descent-myfork
       osx-arm64:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/_openmp_mutex-4.5-7_kmp_llvm.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/_python_abi3_support-1.0-hd8ed1ab_2.conda
@@ -819,9 +819,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zlib-ng-2.3.3-hed4e4f5_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstandard-0.25.0-py311h5bb9006_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.7-hbf9d68e_6.conda
+      - pypi: git+https://github.com/jmorado/descent.git?branch=feature_periodic_systems#0da9ecd56fbc89f1aec2e0b583f662059f2ada78
       - pypi: git+https://github.com/openforcefield/smee.git#0d0b42d2096b27ea518bc24c18979b40de5ce93e
       - pypi: ./
-      - pypi: /home/joaomorado/repos/descent-myfork
   ci-cpu-py312:
     channels:
     - url: https://conda.anaconda.org/conda-forge/
@@ -1239,9 +1239,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zlib-ng-2.3.3-hceb46e0_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstandard-0.25.0-py312h5253ce2_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb78ec9c_6.conda
+      - pypi: git+https://github.com/jmorado/descent.git?branch=feature_periodic_systems#0da9ecd56fbc89f1aec2e0b583f662059f2ada78
       - pypi: git+https://github.com/openforcefield/smee.git#0d0b42d2096b27ea518bc24c18979b40de5ce93e
       - pypi: ./
-      - pypi: /home/joaomorado/repos/descent-myfork
       osx-arm64:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/_openmp_mutex-4.5-7_kmp_llvm.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/_python_abi3_support-1.0-hd8ed1ab_2.conda
@@ -1641,9 +1641,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zlib-ng-2.3.3-hed4e4f5_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstandard-0.25.0-py312h37e1c23_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.7-hbf9d68e_6.conda
+      - pypi: git+https://github.com/jmorado/descent.git?branch=feature_periodic_systems#0da9ecd56fbc89f1aec2e0b583f662059f2ada78
       - pypi: git+https://github.com/openforcefield/smee.git#0d0b42d2096b27ea518bc24c18979b40de5ce93e
       - pypi: ./
-      - pypi: /home/joaomorado/repos/descent-myfork
   ci-cpu-py313:
     channels:
     - url: https://conda.anaconda.org/conda-forge/
@@ -2059,9 +2059,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zlib-ng-2.3.3-hceb46e0_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstandard-0.25.0-py313h54dd161_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb78ec9c_6.conda
+      - pypi: git+https://github.com/jmorado/descent.git?branch=feature_periodic_systems#0da9ecd56fbc89f1aec2e0b583f662059f2ada78
       - pypi: git+https://github.com/openforcefield/smee.git#0d0b42d2096b27ea518bc24c18979b40de5ce93e
       - pypi: ./
-      - pypi: /home/joaomorado/repos/descent-myfork
       osx-arm64:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/_openmp_mutex-4.5-7_kmp_llvm.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/_python_abi3_support-1.0-hd8ed1ab_2.conda
@@ -2460,9 +2460,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zlib-ng-2.3.3-hed4e4f5_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstandard-0.25.0-py313h9734d34_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.7-hbf9d68e_6.conda
+      - pypi: git+https://github.com/jmorado/descent.git?branch=feature_periodic_systems#0da9ecd56fbc89f1aec2e0b583f662059f2ada78
       - pypi: git+https://github.com/openforcefield/smee.git#0d0b42d2096b27ea518bc24c18979b40de5ce93e
       - pypi: ./
-      - pypi: /home/joaomorado/repos/descent-myfork
   default:
     channels:
     - url: https://conda.anaconda.org/conda-forge/
@@ -2933,9 +2933,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zlib-ng-2.3.3-hceb46e0_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstandard-0.25.0-py312h5253ce2_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb78ec9c_6.conda
+      - pypi: git+https://github.com/jmorado/descent.git?branch=feature_periodic_systems#0da9ecd56fbc89f1aec2e0b583f662059f2ada78
       - pypi: git+https://github.com/openforcefield/smee.git#0d0b42d2096b27ea518bc24c18979b40de5ce93e
       - pypi: ./
-      - pypi: /home/joaomorado/repos/descent-myfork
       osx-arm64:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/_openmp_mutex-4.5-7_kmp_llvm.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/_python_abi3_support-1.0-hd8ed1ab_2.conda
@@ -3352,9 +3352,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zlib-ng-2.3.3-hed4e4f5_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstandard-0.25.0-py312h37e1c23_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.7-hbf9d68e_6.conda
+      - pypi: git+https://github.com/jmorado/descent.git?branch=feature_periodic_systems#0da9ecd56fbc89f1aec2e0b583f662059f2ada78
       - pypi: git+https://github.com/openforcefield/smee.git#0d0b42d2096b27ea518bc24c18979b40de5ce93e
       - pypi: ./
-      - pypi: /home/joaomorado/repos/descent-myfork
   gpu-cu12-py311:
     channels:
     - url: https://conda.anaconda.org/conda-forge/
@@ -3848,9 +3848,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zlib-ng-2.3.3-hceb46e0_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstandard-0.25.0-py311haee01d2_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb78ec9c_6.conda
+      - pypi: git+https://github.com/jmorado/descent.git?branch=feature_periodic_systems#0da9ecd56fbc89f1aec2e0b583f662059f2ada78
       - pypi: git+https://github.com/openforcefield/smee.git#0d0b42d2096b27ea518bc24c18979b40de5ce93e
       - pypi: ./
-      - pypi: /home/joaomorado/repos/descent-myfork
   gpu-cu12-py312:
     channels:
     - url: https://conda.anaconda.org/conda-forge/
@@ -4344,9 +4344,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zlib-ng-2.3.3-hceb46e0_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstandard-0.25.0-py312h5253ce2_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb78ec9c_6.conda
+      - pypi: git+https://github.com/jmorado/descent.git?branch=feature_periodic_systems#0da9ecd56fbc89f1aec2e0b583f662059f2ada78
       - pypi: git+https://github.com/openforcefield/smee.git#0d0b42d2096b27ea518bc24c18979b40de5ce93e
       - pypi: ./
-      - pypi: /home/joaomorado/repos/descent-myfork
   gpu-cu12-py313:
     channels:
     - url: https://conda.anaconda.org/conda-forge/
@@ -4838,9 +4838,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zlib-ng-2.3.3-hceb46e0_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstandard-0.25.0-py313h54dd161_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb78ec9c_6.conda
+      - pypi: git+https://github.com/jmorado/descent.git?branch=feature_periodic_systems#0da9ecd56fbc89f1aec2e0b583f662059f2ada78
       - pypi: git+https://github.com/openforcefield/smee.git#0d0b42d2096b27ea518bc24c18979b40de5ce93e
       - pypi: ./
-      - pypi: /home/joaomorado/repos/descent-myfork
 packages:
 - conda: https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-7_kmp_llvm.conda
   build_number: 7
@@ -7295,10 +7295,9 @@ packages:
   - pkg:pypi/defusedxml?source=hash-mapping
   size: 24062
   timestamp: 1615232388757
-- pypi: /home/joaomorado/repos/descent-myfork
+- pypi: git+https://github.com/jmorado/descent.git?branch=feature_periodic_systems#0da9ecd56fbc89f1aec2e0b583f662059f2ada78
   name: descent
-  version: 0.1.dev50+ga1b6b65a5.d20260324
-  sha256: 810055132fd4575de1c84b7847b83db8c5a79262e86d54de2a3bef379864681c
+  version: 0.1.dev52+g0da9ecd56
   requires_python: '>=3.10'
 - conda: https://conda.anaconda.org/conda-forge/noarch/dill-0.3.8-pyhd8ed1ab_0.conda
   sha256: 482b5b566ca559119b504c53df12b08f3962a5ef8e48061d62fd58a47f8f2ec4
@@ -18048,7 +18047,7 @@ packages:
 - pypi: ./
   name: scalej
   version: 0.1.0
-  sha256: 02e755282fac6738d65481c72136a4965c35b8518bf85ccfaf3d69a70ec7ce72
+  sha256: 3e8b215ae303aa4e866c48054c19fe0dff727a2a0de87f34b9c4f073ffc4026a
   requires_python: '>=3.11'
 - conda: https://conda.anaconda.org/conda-forge/linux-64/scipy-1.17.1-py311hbe70eeb_0.conda
   sha256: 0063a75e9406357ef8ecc2fb38808a2442b269bfc5a854cf2bcd368060d9a2d7
