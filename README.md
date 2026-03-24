@@ -20,3 +20,7 @@ pixi shell
 ## Usage
 
 Currently, SCALeJ is a work in progress and only the API is provided. A CLI and Snakemake pipeline will be provided in the future.
+
+## Links
+
+[![Hypercommit](https://img.shields.io/badge/Hypercommit-DB2475)](https://hypercommit.com/scalej)
