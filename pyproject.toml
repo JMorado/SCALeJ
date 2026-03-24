@@ -70,7 +70,7 @@ exclude_lines = [
 ]
 
 # ----------------------------------------- #
-#               Pixi                      #
+#                  Pixi                     #
 # ----------------------------------------- #
 [tool.pixi.workspace]
 channels = ["conda-forge"]
@@ -93,7 +93,7 @@ version = "*"
 channels = ["https://prefix.dev/conda-forge"]
 
 [tool.pixi.environments]
-default = { features = ["py312", "cu12", "mm", "data", "viz", "examples", "dev"]}
+default = { features = ["py312", "mm", "data", "viz", "examples", "dev"]}
 ci-cpu-py311 = { features = ["py311", "mm", "data", "dev"]}
 ci-cpu-py312 = { features = ["py312", "mm", "data", "dev"]}
 ci-cpu-py313 = { features = ["py313", "mm", "data", "dev"]}
@@ -114,7 +114,8 @@ pydantic-units = "*"
 [tool.pixi.pypi-dependencies]
 scalej = { path = ".", editable = true }
 smee = { git = "https://github.com/openforcefield/smee.git" }
-descent = { git = "https://github.com/openforcefield/descent.git" }
+# descent = { git = "https://github.com/openforcefield/descent.git" }
+descent = { path = "/home/joaomorado/repos/descent-myfork", editable = true }
 
 [tool.pixi.feature.cu12]
 platforms = ["linux-64"]
@@ -170,5 +171,6 @@ python = "3.13.*"
 [tool.pixi.tasks]
 lint = "ruff check scalej"
 format = "ruff format scalej && ruff check --fix --select I scalej"
+lint-check = "ruff format --check scalej && ruff check scalej"
 test = "pytest -v --cov=scalej --cov-report=term-missing --cov-report=xml"
 typecheck = "mypy scalej"
