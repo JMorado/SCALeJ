@@ -8,7 +8,7 @@ import openmm.unit
 import smee
 from tqdm import tqdm
 
-from ..constants import EV_TO_KCAL_MOL
+EV_TO_KCAL_MOL = 23.06054194533
 
 
 def setup_mlp_simulation(
