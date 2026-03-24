@@ -5,10 +5,8 @@ import pytest
 from pydantic import ValidationError
 
 from scalej.config import (
-    MoleculeComponent,
     ScalingConfig,
     SimulationConfig,
-    SystemConfig,
     TrainingConfig,
 )
 
@@ -64,19 +62,3 @@ class TestTrainingConfig:
             TrainingConfig(weighting_method="invalid")
 
 
-class TestSystemSetup:
-    def test_molecule_component(self):
-        comp = MoleculeComponent(smiles="C", nmol=10)
-        assert comp.smiles == "C"
-        assert comp.nmol == 10
-
-        with pytest.raises(ValidationError):
-            MoleculeComponent(smiles="C")  # Missing nmol
-
-    def test_system_config(self):
-        comp = MoleculeComponent(smiles="C", nmol=10)
-        config = SystemConfig(name="methane", components=[comp])
-        assert config.name == "methane"
-        assert len(config.components) == 1
-        assert config.weight == pytest.approx(1.0)
-        assert config.trajectory_path is None

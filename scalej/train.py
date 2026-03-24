@@ -16,7 +16,7 @@ def run_training_loop(
     trainable: descent.train.Trainable,
     n_epochs: int,
     lr: float,
-    log_every: int = 10,
+    log_every: int = 1,
     clamp: bool = True,
 ) -> list[float]:
     """

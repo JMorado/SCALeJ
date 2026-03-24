@@ -79,7 +79,7 @@ def predict_energies_forces(
         else:
             box_vectors_all = None
 
-        # Normalize by number of molecules
+        # Normalize by number of molecules.
         if isinstance(topology, smee.TensorSystem):
             n_mols = sum(topology.n_copies)
         else:
@@ -88,14 +88,14 @@ def predict_energies_forces(
         energy_ref = energy_ref / n_mols
         forces_ref = forces_ref / n_mols
 
-        # Save full (pre-filter) arrays
+        # Save full (pre-filter) arrays.
         energy_ref_full = energy_ref.clone()
         coords_full = coords_all.clone()
         box_vectors_full = (
             box_vectors_all.clone() if box_vectors_all is not None else None
         )
 
-        # Apply energy cutoff filtering
+        # Apply energy cutoff filtering.
         if energy_cutoff is not None:
             mask = (energy_ref - energy_ref.min()) <= energy_cutoff
             valid_idxs = mask.nonzero(as_tuple=True)[0].tolist()
@@ -115,14 +115,14 @@ def predict_energies_forces(
         else:
             mask_idxs_all.append(list(range(n_confs)))
 
-        # Determine reference conformer index and compute reference prediction energy
+        # Determine reference conformer index and compute reference prediction energy.
         if reference == "mean":
-            ref_idx = None  # Will compute mean of all predictions
+            ref_idx = None  # Will compute mean of all predictions.
         elif reference == "min":
-            # Use minimum from full (pre-filtered) array
+            # Use minimum from full (pre-filtered) array.
             ref_idx = int(energy_ref_full.argmin().item())
         elif reference == "infinite":
-            # Use last conformer from full (pre-filtered) array
+            # Use last conformer from full (pre-filtered) array.
             ref_idx = len(energy_ref_full) - 1
         elif reference == "none":
             ref_idx = None
@@ -132,7 +132,7 @@ def predict_energies_forces(
                 "'mean', 'min', 'none', or 'infinite'."
             )
 
-        # Compute reference prediction energy if needed (from pre-filter arrays)
+        # Compute reference prediction energy if needed (from pre-filter arrays).
         e_pred_0 = None
         if ref_idx is not None:
             ref_coords = coords_full[ref_idx].clone()
@@ -155,7 +155,7 @@ def predict_energies_forces(
             )
             e_pred_0 = (e_pred_0.squeeze() / n_mols).detach()
 
-        # Subtract reference data energy from reference energies
+        # Subtract reference data energy from reference energies.
         if reference == "mean":
             ref_data_energy = energy_ref.mean()
         elif reference == "none":
@@ -214,16 +214,18 @@ def predict_energies_forces(
 
         energy_preds_stack = torch.stack(energy_preds_entry)
 
-        # Now apply reference subtraction based on reference mode
+        # Now apply reference subtraction based on reference mode.
         if reference == "mean":
-            # For mean: subtract mean of filtered predictions
+            # For mean: subtract mean of filtered predictions.
             energy_pred_ref = energy_preds_stack.mean()
             energy_preds_stack = energy_preds_stack - energy_pred_ref
         elif reference in ("min", "infinite"):
             # For min/infinite: subtract prediction of reference conformer (from full array)
             if e_pred_0 is not None:
                 energy_preds_stack = energy_preds_stack - e_pred_0
-        # else: reference == "none", keep absolute energies
+        else:
+            # Keep absolute energies.
+            pass
 
         energy_preds.append(energy_preds_stack)
         energy_refs.append(energy_ref)
@@ -231,7 +233,7 @@ def predict_energies_forces(
         forces_preds.append(torch.stack(forces_preds_entry))
         entry_ids_all.append(entry_id)
 
-    # Concatenate all results
+    # Concatenate all results.
     ff_device = force_field.potentials[0].parameters.device
     energy_ref_all = (
         torch.cat(energy_refs) if energy_refs else torch.tensor([], device=ff_device)

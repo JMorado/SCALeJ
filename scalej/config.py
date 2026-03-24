@@ -5,7 +5,6 @@ from typing import Literal
 import openmm.unit
 import pydantic
 from pydantic_units import OpenMMQuantity, quantity_serializer
-from smee import TensorForceField, TensorSystem, TensorTopology
 
 # Unit type aliases
 _KELVIN = openmm.unit.kelvin
@@ -189,67 +188,4 @@ class TrainingConfig(BaseModel):
     )
     compute_forces: bool = pydantic.Field(
         True, description="Whether to compute forces."
-    )
-
-
-class MoleculeComponent(BaseModel):
-    """
-    Single molecular component in a mixture.
-
-    Attributes
-    ----------
-    smiles : str
-        Indexed SMILES string for the molecule.
-    nmol : int
-        Number of molecules of this component.
-    """
-
-    smiles: str = pydantic.Field(
-        ..., description="Indexed SMILES string for the molecule."
-    )
-    nmol: int = pydantic.Field(
-        ..., description="Number of molecules of this component."
-    )
-
-
-class SystemConfig(BaseModel):
-    """
-    Configuration for a single system.
-
-    Attributes
-    ----------
-    name : str
-        Identifier for this system.
-    components : list[MoleculeComponent]
-        List of molecular components in this mixture.
-    trajectory_path : Optional[str]
-        Path to existing trajectory file for this mixture.
-    weight : float
-        Weight of this mixture in the loss function (default: 1.0).
-    """
-
-    name: str = pydantic.Field(..., description="Identifier for this mixture.")
-    components: list[MoleculeComponent] = pydantic.Field(
-        ..., description="List of molecular components in this mixture."
-    )
-    trajectory_path: str | None = pydantic.Field(
-        None, description="Path to existing trajectory file for this mixture."
-    )
-    weight: float = pydantic.Field(
-        1.0, description="Weight of this mixture in the loss function."
-    )
-    tensor_forcefield: TensorForceField | None = pydantic.Field(
-        None, description="Tensor force field (populated during workflow)."
-    )
-    tensor_system: TensorSystem | None = pydantic.Field(
-        None, description="Tensor system (populated during workflow)."
-    )
-    topologies: list[TensorTopology] | None = pydantic.Field(
-        None, description="Molecular topologies (populated during workflow)."
-    )
-    nmol: list[int] | None = pydantic.Field(
-        None,
-        description=(
-            "Number of molecules for each component (populated during workflow)."
-        ),
     )
