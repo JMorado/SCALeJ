@@ -9,6 +9,7 @@ import openmm.unit
 import smee.mm
 from tqdm import tqdm
 
+from ..config import SimulationConfig
 from ..types import TrajectoryFrames
 
 
@@ -16,13 +17,7 @@ def run_simulation_smee(
     tensor_system: smee.TensorSystem,
     tensor_forcefield: smee.TensorForceField,
     output_path: Path | str,
-    temperature: openmm.unit.Quantity = 300 * openmm.unit.kelvin,
-    pressure: openmm.unit.Quantity = 1.0 * openmm.unit.atmosphere,
-    timestep: openmm.unit.Quantity = 1.0 * openmm.unit.femtoseconds,
-    n_equilibration_nvt_steps: int = 50_000,
-    n_equilibration_npt_steps: int = 50_000,
-    n_production_steps: int = 1_000_000,
-    report_interval: int = 1000,
+    config: SimulationConfig,
     save_pdb: bool = True,
 ) -> tuple[np.ndarray, np.ndarray]:
     """
@@ -36,20 +31,8 @@ def run_simulation_smee(
         The force field for the simulation.
     output_path : Path | str
         Path for output trajectory file (DCD format).
-    temperature : openmm.unit.Quantity
-        Simulation temperature.
-    pressure : openmm.unit.Quantity
-        Simulation pressure.
-    timestep : openmm.unit.Quantity
-        Integration timestep.
-    n_equilibration_nvt_steps : int
-        Number of NVT equilibration steps.
-    n_equilibration_npt_steps : int
-        Number of NPT equilibration steps.
-    n_production_steps : int
-        Number of production MD steps.
-    report_interval : int
-        Interval for saving trajectory frames.
+    config : SimulationConfig
+        Configuration object containing simulation parameters.
     save_pdb : bool
         Whether to save a PDB trajectory file as well.
 
@@ -58,7 +41,7 @@ def run_simulation_smee(
     tuple[np.ndarray, np.ndarray]
         Initial coordinates and box vectors.
     """
-    beta = 1.0 / (openmm.unit.MOLAR_GAS_CONSTANT_R * temperature)
+    beta = 1.0 / (openmm.unit.MOLAR_GAS_CONSTANT_R * config.temperature)
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -66,25 +49,25 @@ def run_simulation_smee(
     equilibrate_config = [
         smee.mm.MinimizationConfig(),
         smee.mm.SimulationConfig(
-            temperature=temperature,
+            temperature=config.temperature,
             pressure=None,
-            n_steps=n_equilibration_nvt_steps,
-            timestep=timestep,
+            n_steps=config.n_equilibration_nvt_steps,
+            timestep=config.timestep,
         ),
         smee.mm.SimulationConfig(
-            temperature=temperature,
-            pressure=pressure,
-            n_steps=n_equilibration_npt_steps,
-            timestep=timestep,
+            temperature=config.temperature,
+            pressure=config.pressure,
+            n_steps=config.n_equilibration_npt_steps,
+            timestep=config.timestep,
         ),
     ]
 
     # Production configuration.
     production_config = smee.mm.SimulationConfig(
-        temperature=temperature,
-        pressure=pressure,
-        n_steps=n_production_steps,
-        timestep=timestep,
+        temperature=config.temperature,
+        pressure=config.pressure,
+        n_steps=config.n_production_steps,
+        timestep=config.timestep,
     )
 
     initial_coords, box_vectors = smee.mm.generate_system_coords(
@@ -95,12 +78,12 @@ def run_simulation_smee(
     if save_pdb:
         pdb_reporter_file = output_path.parent / f"trajectory_{output_path.stem}.pdb"
         pdb_reporter = openmm.app.PDBReporter(
-            pdb_reporter_file.as_posix(), report_interval
+            pdb_reporter_file.as_posix(), config.report_interval
         )
         reporters.append(pdb_reporter)
 
     with smee.mm.tensor_reporter(
-        output_path, report_interval, beta, pressure
+        output_path, config.report_interval, beta, config.pressure
     ) as tensor_reporter:
         reporters.insert(0, tensor_reporter)
         smee.mm.simulate(

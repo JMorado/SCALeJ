@@ -7,6 +7,8 @@ import smee.converters
 from openff.interchange import Interchange
 from openff.toolkit import ForceField, Molecule
 
+from ..config import SystemConfig
+
 
 def create_system_from_smiles(
     smiles_list: list[str],
@@ -55,7 +57,7 @@ def create_system_from_smiles(
 
 
 def create_composite_system(
-    systems_config: list[dict],
+    systems_config: list[SystemConfig],
     forcefield_name: str = "openff-2.0.0.offxml",
     charge_assignment_callback: Optional[callable] = None,
 ) -> tuple[
@@ -74,10 +76,8 @@ def create_composite_system(
 
     Parameters
     ----------
-    systems_config : list[dict]
-        List of system configurations, each with:
-        - "name": System identifier
-        - "components": List of {"smiles": str, "nmol": int}
+    systems_config : list[SystemConfig]
+        List of system configurations.
     forcefield_name : str
         Name of the OpenFF force field.
 
@@ -92,11 +92,9 @@ def create_composite_system(
     """
     # Get all smiles and nmol values.
     all_smiles = [
-        comp["smiles"] for system in systems_config for comp in system["components"]
+        comp.smiles for system in systems_config for comp in system.components
     ]
-    all_nmols = [
-        comp["nmol"] for system in systems_config for comp in system["components"]
-    ]
+    all_nmols = [comp.nmol for system in systems_config for comp in system.components]
 
     # Create the composite system using the shared forcefield and topologies.
     composite_tensor_system, composite_tensor_forcefield, composite_topologies = (
@@ -112,13 +110,13 @@ def create_composite_system(
     all_tensor_systems = {}
     idx_counter = 0
     for system in systems_config:
-        n_comps = len(system["components"])
+        n_comps = len(system.components)
         system_topologies = composite_topologies[idx_counter : idx_counter + n_comps]
         idx_counter += n_comps
 
-        all_tensor_systems[system["name"]] = smee.TensorSystem(
+        all_tensor_systems[system.name] = smee.TensorSystem(
             system_topologies,
-            [comp["nmol"] for comp in system["components"]],
+            [comp.nmol for comp in system.components],
             is_periodic=True,
         )
 
