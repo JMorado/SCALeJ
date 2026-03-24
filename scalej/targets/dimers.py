@@ -11,7 +11,7 @@ import smee
 import smee.utils
 import torch
 
-from scalej.targets.condensed import ReferenceMode
+from .condensed import ReferenceMode
 
 
 def _get_reference(

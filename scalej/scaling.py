@@ -4,7 +4,6 @@ import numpy as np
 import smee
 
 from .config import ScalingConfig
-from .types import ScalingResult
 
 
 def generate_scale_factors(
@@ -166,7 +165,7 @@ def create_scaled_configurations(
     coords: np.ndarray,
     box_vectors: np.ndarray,
     scale_factors: np.ndarray,
-) -> ScalingResult:
+) -> tuple[list[np.ndarray], list[np.ndarray], np.ndarray]:
     """
     Create a dataset with multiple scaled versions of input configurations.
 
@@ -183,8 +182,8 @@ def create_scaled_configurations(
 
     Returns
     -------
-    ScalingResult
-        Result containing scaled coordinates, box vectors, and scale factors.
+    tuple[list[np.ndarray], list[np.ndarray], np.ndarray]
+        ``(coords, box_vectors, scale_factors)``.
     """
     all_coords = []
     all_box_vectors = []
@@ -235,8 +234,4 @@ def create_scaled_configurations(
         n_frames = coords.shape[0]
         expanded_scale_factors = np.repeat(scale_factors, n_frames)
 
-    return ScalingResult(
-        coords=all_coords,
-        box_vectors=all_box_vectors,
-        scale_factors=expanded_scale_factors,
-    )
+    return all_coords, all_box_vectors, expanded_scale_factors

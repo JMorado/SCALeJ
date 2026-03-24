@@ -12,7 +12,6 @@ from scalej.targets.condensed import (
     default_closure,
 )
 
-_DEVICE = torch.device("cpu")
 
 
 class TestPrepareEntryData:
@@ -25,7 +24,6 @@ class TestPrepareEntryData:
             condensed_topologies["water"],
             reference,
             normalize=True,
-            device=_DEVICE,
         )
         assert len(result) == 12
 
@@ -35,7 +33,6 @@ class TestPrepareEntryData:
             condensed_topologies["water"],
             "mean",
             normalize=True,
-            device=_DEVICE,
         )
         assert weights.sum().item() == pytest.approx(1.0)
 
@@ -47,7 +44,6 @@ class TestPrepareEntryData:
             condensed_topologies["water"],
             "mean",
             normalize=True,
-            device=_DEVICE,
         )
         assert energy_var.item() > 0
         assert forces_var.item() > 0
@@ -60,7 +56,6 @@ class TestPrepareEntryData:
             condensed_topologies["water"],
             "mean",
             normalize=False,
-            device=_DEVICE,
         )
         assert energy_var.item() == pytest.approx(1.0)
         assert forces_var.item() == pytest.approx(1.0)
@@ -73,7 +68,6 @@ class TestPrepareEntryData:
             condensed_topologies["water"],
             "mean",
             normalize=True,
-            device=_DEVICE,
         )
         assert delta_energy_ref.sum().item() == pytest.approx(0.0, abs=1e-5)
 
@@ -85,7 +79,6 @@ class TestPrepareEntryData:
             condensed_topologies["water"],
             "none",
             normalize=True,
-            device=_DEVICE,
         )
         expected = torch.tensor([-50.0, -49.5, -49.0, -48.5], dtype=energy_ref.dtype)
         assert torch.allclose(energy_ref, expected, atol=1e-6)
@@ -96,7 +89,6 @@ class TestPrepareEntryData:
             condensed_topologies["water"],
             "mean",
             normalize=True,
-            device=_DEVICE,
         )
         expected = torch.full((4,), 0.25)
         assert torch.allclose(weights, expected, atol=1e-7)
@@ -122,7 +114,6 @@ class TestPrepareEntryData:
             condensed_topologies["water"],
             reference,
             normalize=True,
-            device=_DEVICE,
         )
         expected = torch.tensor(expected_delta, dtype=delta_energy_ref.dtype)
         assert torch.allclose(delta_energy_ref, expected, atol=1e-6)
@@ -134,7 +125,6 @@ class TestPrepareEntryData:
             condensed_topologies["water"],
             "mean",
             normalize=True,
-            device=_DEVICE,
         )
         assert energy_var.item() == pytest.approx(5 / 12, rel=1e-5)
 
@@ -144,7 +134,6 @@ class TestPrepareEntryData:
             condensed_topologies["water"],
             "mean",
             normalize=True,
-            device=_DEVICE,
         )
         assert forces_var.item() == pytest.approx(0.05368128988823037, rel=1e-5)
 
@@ -158,7 +147,6 @@ class TestPrepareEntryData:
             condensed_topologies["water"],
             "mean",
             normalize=True,
-            device=_DEVICE,
             energy_cutoff=0.25,
         )
         assert len(delta_energy_ref) == 1
@@ -182,7 +170,6 @@ class TestPrepareEntryData:
             condensed_topologies["water"],
             "mean",
             normalize=True,
-            device=_DEVICE,
             energy_cutoff=1.0,
         )
         assert len(delta) == 1
@@ -206,7 +193,6 @@ class TestPrepareEntryData:
             condensed_topologies["water"],
             "mean",
             normalize=True,
-            device=_DEVICE,
         )
         assert energy_var.item() == pytest.approx(1.0)
         assert forces_var.item() == pytest.approx(1.0)
@@ -232,7 +218,7 @@ class TestComputeReferencePrediction:
             ref_coords,
             ref_box_vectors,
         ) = _prepare_entry_data(
-            condensed_dataset[0], topology, "min", normalize=True, device=_DEVICE
+            condensed_dataset[0], topology, "min", normalize=True
         )
         return {
             "topology": topology,
@@ -295,7 +281,7 @@ class TestComputeBatchLoss:
             _,
             _,
         ) = _prepare_entry_data(
-            condensed_dataset[0], topology, "min", normalize=True, device=_DEVICE
+            condensed_dataset[0], topology, "min", normalize=True
         )
         return {
             "topology": topology,

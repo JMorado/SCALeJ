@@ -31,6 +31,7 @@ def train_dataset():
     import descent.targets.energy
 
     entry: descent.targets.energy.Entry = {
+        "id": "water",
         "smiles": "water",
         "coords": torch.tensor(_COORDS, dtype=torch.float64),
         "energy": torch.tensor(_ENERGIES, dtype=torch.float64),

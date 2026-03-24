@@ -47,7 +47,7 @@ def water_dimer_box_multiframe():
 @pytest.fixture(scope="module")
 def water_system():
     """TensorSystem, TensorForceField, and topologies for a water dimer."""
-    from scalej.simulation._systems import create_system_from_smiles
+    from scalej.simulation.systems import create_system_from_smiles
 
     tensor_system, tensor_forcefield, topologies = create_system_from_smiles(
         smiles_list=["O"],
@@ -59,7 +59,7 @@ def water_system():
 @pytest.fixture(scope="module")
 def water_methane_system():
     """TensorSystem, TensorForceField, and topologies for water + methane."""
-    from scalej.simulation._systems import create_system_from_smiles
+    from scalej.simulation.systems import create_system_from_smiles
 
     tensor_system, tensor_forcefield, topologies = create_system_from_smiles(
         smiles_list=["O", "C"],
@@ -71,15 +71,10 @@ def water_methane_system():
 @pytest.fixture(scope="module")
 def composite_system():
     """Composite system from two named components (water + methane)."""
-    from scalej.config import MoleculeComponent, SystemConfig
-    from scalej.simulation._systems import create_composite_system
+    from scalej.simulation.systems import create_composite_system
 
     config = [
-        SystemConfig(
-            name="water", components=[MoleculeComponent(smiles="O", nmol=2)]
-        ),
-        SystemConfig(
-            name="methane", components=[MoleculeComponent(smiles="C", nmol=3)]
-        ),
+        {"name": "water", "components": [{"smiles": "O", "nmol": 2}]},
+        {"name": "methane", "components": [{"smiles": "C", "nmol": 3}]},
     ]
     return create_composite_system(config)

@@ -9,7 +9,6 @@ import smee
 from tqdm import tqdm
 
 from ..constants import EV_TO_KCAL_MOL
-from ..types import EnergyForceResult
 
 
 def setup_mlp_simulation(
@@ -74,7 +73,7 @@ def compute_mlp_energies_forces(
     coords_list: list[np.ndarray],
     box_vectors_list: list[np.ndarray],
     show_progress: bool = True,
-) -> EnergyForceResult:
+) -> tuple[np.ndarray, np.ndarray]:
     """Compute energies and forces for configurations using ML potential.
 
     Evaluates the ML potential energy and forces for each configuration
@@ -93,8 +92,10 @@ def compute_mlp_energies_forces(
 
     Returns
     -------
-    EnergyForceResult
-        Result containing energies [kcal/mol] and forces [kcal/mol/Å].
+    tuple[np.ndarray, np.ndarray]
+        ``(energies, forces)`` where energies has shape ``(n_configs,)``
+        in kcal/mol and forces has shape ``(n_configs, n_atoms, 3)``
+        in kcal/mol/Å.
     """
     energies = []
     forces = []
@@ -122,10 +123,7 @@ def compute_mlp_energies_forces(
         energies.append(energy)
         forces.append(force)
 
-    return EnergyForceResult(
-        energies=np.array(energies),
-        forces=np.array(forces),
-    )
+    return np.array(energies), np.array(forces)
 
 
 def ase_atoms_from_tensor_system(
@@ -165,7 +163,7 @@ def compute_ase_energies_forces(
     spin: int = 1,
     external_field: list[float] | None = None,
     show_progress: bool = True,
-) -> EnergyForceResult:
+) -> tuple[np.ndarray, np.ndarray]:
     """
     Compute energies and forces for configurations using an ASE calculator.
 
@@ -191,8 +189,10 @@ def compute_ase_energies_forces(
 
     Returns
     -------
-    EnergyForceResult
-        Result containing energies [kcal/mol] and forces [kcal/mol/Å].
+    tuple[np.ndarray, np.ndarray]
+        ``(energies, forces)`` where energies has shape ``(n_configs,)``
+        in kcal/mol and forces has shape ``(n_configs, n_atoms, 3)``
+        in kcal/mol/Å.
     """
     atoms = ase_atoms_from_tensor_system(tensor_system)
 
@@ -223,7 +223,4 @@ def compute_ase_energies_forces(
         energies.append(atoms_frame.get_potential_energy() * EV_TO_KCAL_MOL)
         forces.append(atoms_frame.get_forces() * EV_TO_KCAL_MOL)
 
-    return EnergyForceResult(
-        energies=np.array(energies),
-        forces=np.array(forces),
-    )
+    return np.array(energies), np.array(forces)

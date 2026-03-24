@@ -5,6 +5,7 @@ import logging
 import descent.train
 import descent.utils.loss
 import torch
+from tqdm.auto import tqdm
 
 LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +48,8 @@ def run_training_loop(
     optimizer = torch.optim.Adam([params], lr=lr)
     losses = []
 
-    for epoch in range(n_epochs):
+    pbar = tqdm(range(n_epochs), desc="Training")
+    for epoch in pbar:
         optimizer.zero_grad()
         loss, grad, _ = closure(params, compute_gradient=True, compute_hessian=False)
         if grad is not None:
@@ -56,7 +58,10 @@ def run_training_loop(
         if clamp:
             with torch.no_grad():
                 params.data = trainable.clamp(params.data)
-        losses.append(loss.item())
+
+        loss_val = loss.item()
+        losses.append(loss_val)
+        pbar.set_postfix({"loss": f"{loss_val:.4e}"})
 
         if epoch % log_every == 0 or epoch == n_epochs - 1:
             per_target = getattr(closure, "last_losses", {})

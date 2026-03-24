@@ -43,7 +43,7 @@ class TestCreateSystemFromSmiles:
         import torch
         from openff.units import unit as off_unit
 
-        from scalej.simulation._systems import create_system_from_smiles
+        from scalej.simulation.systems import create_system_from_smiles
 
         custom_q = [-0.8, 0.4, 0.4]  # e
 

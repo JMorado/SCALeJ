@@ -10,7 +10,6 @@ import smee.mm
 from tqdm import tqdm
 
 from ..config import SimulationConfig
-from ..types import TrajectoryFrames
 
 
 def run_simulation_smee(
@@ -140,7 +139,7 @@ def load_trajectory_frames_smee(
     trajectory_path: Path | str,
     n_frames: int = 1,
     from_end: bool = True,
-) -> TrajectoryFrames:
+) -> tuple[np.ndarray, np.ndarray, int]:
     """Load frames from a trajectory file.
 
     Parameters
@@ -154,8 +153,8 @@ def load_trajectory_frames_smee(
 
     Returns
     -------
-    TrajectoryFrames
-        Container with coordinates, box vectors, and frame count.
+    tuple[np.ndarray, np.ndarray, int]
+        ``(coords, box_vectors, n_frames)``.
     """
     coords_list = []
     box_vectors_list = []
@@ -198,8 +197,4 @@ def load_trajectory_frames_smee(
             [b.detach().cpu().numpy() for b in selected_box_vectors], axis=0
         )
 
-    return TrajectoryFrames(
-        coords=coords_array,
-        box_vectors=box_vectors_array,
-        n_frames=n_frames,
-    )
+    return coords_array, box_vectors_array, n_frames

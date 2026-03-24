@@ -38,7 +38,8 @@ def normalize_closure_weights(
 
     for name, closure in closures.items():
         with torch.no_grad():
-            loss, *_ = closure(params, compute_gradient=False, compute_hessian=False)
+            with torch.enable_grad():
+                loss, *_ = closure(params, compute_gradient=False, compute_hessian=False)
 
         initial_loss = float(loss.item())
 

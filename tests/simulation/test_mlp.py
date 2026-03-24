@@ -4,12 +4,11 @@ import numpy as np
 import openmm.app
 import pytest
 
-from scalej.simulation._mlp import (
+from scalej.simulation.mlp import (
     ase_atoms_from_tensor_system,
     compute_mlp_energies_forces,
     setup_mlp_simulation,
 )
-from scalej.types import EnergyForceResult
 
 
 class TestAseAtomsFromTensorSystem:
@@ -52,17 +51,16 @@ class TestSetupMlpSimulation:
 class TestComputeMlpEnergiesForces:
     def test_single_frame(self, ani2x_simulation, initial_coords_box_angstrom):
         coords, box = initial_coords_box_angstrom
-        result = compute_mlp_energies_forces(
+        energies, forces = compute_mlp_energies_forces(
             ani2x_simulation, [coords], [box], show_progress=False
         )
-        assert isinstance(result, EnergyForceResult)
-        assert isinstance(result.energies, np.ndarray)
-        assert isinstance(result.forces, np.ndarray)
-        assert result.energies.shape == (1,)
-        assert result.forces.shape == (1, 6, 3)
+        assert isinstance(energies, np.ndarray)
+        assert isinstance(forces, np.ndarray)
+        assert energies.shape == (1,)
+        assert forces.shape == (1, 6, 3)
 
-        assert result.energies == pytest.approx(-95868.51804423)
-        assert result.forces == pytest.approx(
+        assert energies == pytest.approx(-95868.51804423)
+        assert forces == pytest.approx(
             np.array(
                 [
                     [
@@ -88,18 +86,18 @@ class TestComputeMlpEnergiesForces:
         result_prog = compute_mlp_energies_forces(
             ani2x_simulation, [coords], [box], show_progress=True
         )
-        assert result_prog.energies == pytest.approx(result_plain.energies)
-        assert result_prog.forces == pytest.approx(result_plain.forces)
+        assert result_prog[0] == pytest.approx(result_plain[0])
+        assert result_prog[1] == pytest.approx(result_plain[1])
 
     def test_multi_frame(self, ani2x_simulation, initial_coords_box_angstrom):
         coords, box = initial_coords_box_angstrom
-        result = compute_mlp_energies_forces(
+        energies, forces = compute_mlp_energies_forces(
             ani2x_simulation, [coords, coords], [box, box], show_progress=False
         )
-        assert result.energies.shape == (2,)
-        assert result.forces.shape == (2, 6, 3)
-        assert result.energies[0] == pytest.approx(result.energies[1])
-        assert result.forces[0] == pytest.approx(result.forces[1])
+        assert energies.shape == (2,)
+        assert forces.shape == (2, 6, 3)
+        assert energies[0] == pytest.approx(energies[1])
+        assert forces[0] == pytest.approx(forces[1])
 
 
 class TestComputeAseEnergiesForces:
@@ -127,34 +125,34 @@ class TestComputeAseEnergiesForces:
         self, water_system, initial_coords_box_angstrom, mock_calculator
     ):
         from scalej.constants import EV_TO_KCAL_MOL
-        from scalej.simulation._mlp import compute_ase_energies_forces
+        from scalej.simulation.mlp import compute_ase_energies_forces
 
         tensor_system, _, _ = water_system
         coords, box = initial_coords_box_angstrom
-        result = compute_ase_energies_forces(
+        energies, forces = compute_ase_energies_forces(
             tensor_system, mock_calculator, [coords], [box], show_progress=False
         )
-        assert result.energies.shape == (1,)
-        assert result.forces.shape == (1, 6, 3)
-        assert result.energies[0] == pytest.approx(1.0 * EV_TO_KCAL_MOL)
-        assert np.all(result.forces == 0.0)
+        assert energies.shape == (1,)
+        assert forces.shape == (1, 6, 3)
+        assert energies[0] == pytest.approx(1.0 * EV_TO_KCAL_MOL)
+        assert np.all(forces == 0.0)
 
     def test_multi_frame(
         self, water_system, initial_coords_box_angstrom, mock_calculator
     ):
-        from scalej.simulation._mlp import compute_ase_energies_forces
+        from scalej.simulation.mlp import compute_ase_energies_forces
 
         tensor_system, _, _ = water_system
         coords, box = initial_coords_box_angstrom
-        result = compute_ase_energies_forces(
+        energies, forces = compute_ase_energies_forces(
             tensor_system,
             mock_calculator,
             [coords, coords],
             [box, box],
             show_progress=False,
         )
-        assert result.energies.shape == (2,)
-        assert result.forces.shape == (2, 6, 3)
+        assert energies.shape == (2,)
+        assert forces.shape == (2, 6, 3)
 
 
 class TestIntegrationComputeMlpEnergiesForcesSingle:
@@ -166,12 +164,12 @@ class TestIntegrationComputeMlpEnergiesForcesSingle:
         sim = setup_mlp_simulation(
             tensor_system, "ani2x", mlp_device="cpu", platform="CPU"
         )
-        result = compute_mlp_energies_forces(sim, [coords], [box], show_progress=False)
-        assert isinstance(result, EnergyForceResult)
-        assert result.energies.shape == (1,)
-        assert result.forces.shape == (1, 6, 3)
-        assert result.energies[0] == pytest.approx(-95868.51804423)
-        assert result.forces[0] == pytest.approx(
+        energies, forces = compute_mlp_energies_forces(sim, [coords], [box], show_progress=False)
+        assert isinstance(energies, np.ndarray)
+        assert energies.shape == (1,)
+        assert forces.shape == (1, 6, 3)
+        assert energies[0] == pytest.approx(-95868.51804423)
+        assert forces[0] == pytest.approx(
             np.array(
                 [
                     [4.78449105, -14.91768073, -0.68526833],

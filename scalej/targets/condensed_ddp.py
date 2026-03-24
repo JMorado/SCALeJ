@@ -9,6 +9,7 @@ import descent.train
 import descent.utils.loss
 import smee
 import torch
+from tqdm.auto import tqdm
 
 from scalej.targets.condensed import ReferenceMode, _process_entry
 
@@ -82,9 +83,14 @@ def _ddp_worker(
             k: v.to(device) if hasattr(v, "to") else v for k, v in topologies.items()
         }
 
-        for idx in entry_indices:
+        entry_iterator = (
+            tqdm(entry_indices, position=rank, leave=False)
+            if len(entry_indices) > 1
+            else entry_indices
+        )
+        for idx in entry_iterator:
             entry = dataset[idx]
-            # Clone immediately: HuggingFace datasets returns views into a shared
+            # Clone immediately. HuggingFace datasets returns views into a shared
             # Arrow buffer. Two threads accessing the same buffer concurrently
             # triggers PyTorch's "lazy wrapper called at most once" error.
             entry = {
@@ -92,8 +98,10 @@ def _ddp_worker(
                 for k, v in entry.items()
             }
 
-            smiles = entry["smiles"]
-            topology = topologies_dev[smiles]
+            mixture_id = entry["id"]
+            if isinstance(entry_iterator, tqdm):
+                entry_iterator.set_description(f"mixture:{mixture_id}")
+            topology = topologies_dev[mixture_id]
 
             entry_loss, entry_grad, _, _ = _process_entry(
                 entry,

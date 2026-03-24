@@ -49,7 +49,6 @@ class TestTrainingConfig:
         config = TrainingConfig()
         assert config.learning_rate == pytest.approx(0.01)
         assert config.n_epochs == 100
-        assert config.device == "cuda"
         assert config.energy_weight == pytest.approx(1.0)
         assert config.force_weight == pytest.approx(1.0)
         assert config.reference == "none"

@@ -3,12 +3,11 @@
 import numpy as np
 import pytest
 
-from scalej.simulation._simulation import (
+from scalej.simulation.simulation import (
     load_trajectory_frames_smee,
     run_simulation_omm,
     run_simulation_smee,
 )
-from scalej.types import TrajectoryFrames
 
 
 class TestRunSimulationOmm:
@@ -87,14 +86,14 @@ class TestLoadTrajectoryFrames:
         dummy_path = tmp_path / "dummy.dcd"
         dummy_path.write_bytes(b"")
 
-        frames = load_trajectory_frames_smee(
+        coords, box_vectors, n_frames_out = load_trajectory_frames_smee(
             dummy_path, n_frames=n_frames, from_end=from_end
         )
 
-        assert isinstance(frames, TrajectoryFrames)
-        assert frames.n_frames == n_frames
-        assert frames.coords.shape == expected_coords_shape
-        assert frames.box_vectors.shape == expected_box_shape
+        assert isinstance(coords, np.ndarray)
+        assert n_frames_out == n_frames
+        assert coords.shape == expected_coords_shape
+        assert box_vectors.shape == expected_box_shape
 
 
 class TestRunSimulationSmee:

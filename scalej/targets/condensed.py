@@ -8,6 +8,7 @@ import descent.utils.loss
 import smee
 import smee.utils
 import torch
+from tqdm.auto import tqdm
 
 ReferenceMode = Literal["mean", "min", "none", "infinite"]
 
@@ -17,7 +18,6 @@ def _prepare_entry_data(
     topology: smee.TensorTopology | smee.TensorSystem,
     reference: ReferenceMode,
     normalize: bool,
-    device: torch.device,
     energy_cutoff: Optional[float] = None,
 ) -> tuple[
     torch.Tensor,
@@ -45,8 +45,6 @@ def _prepare_entry_data(
         The reference energy mode. See ``_get_reference`` for options.
     normalize
         Whether to apply SCALeJ-style normalization.
-    device
-        The target device for newly created tensors.
     energy_cutoff
         If set, discard conformers whose energy exceeds
         ``min(energy) + energy_cutoff`` (in kcal/mol, before per-molecule
@@ -142,7 +140,7 @@ def _prepare_entry_data(
     delta_energy_ref = (energy_ref - ref_energy).detach()
 
     # Uniform weights.
-    weights = torch.ones(n_confs, device=device) / n_confs
+    weights = torch.ones(n_confs, device=energy_ref.device) / n_confs
 
     # Variance normalization.
     if normalize:
@@ -326,7 +324,12 @@ def _compute_batch_loss(
     box_vectors_batch = [
         None
         if box_vectors_all is None
-        else box_vectors_all[j].detach().clone().contiguous()
+        else smee.utils.tensor_like(
+            box_vectors_all[j], forcefield.potentials[0].parameters
+        )
+        .detach()
+        .clone()
+        .contiguous()
         for j in range(batch_slice.start, batch_slice.stop)
     ]
 
@@ -470,7 +473,7 @@ def _process_entry(
         ref_coords,
         ref_box_vectors,
     ) = _prepare_entry_data(
-        entry, topology, reference, normalize, params.device, energy_cutoff
+        entry, topology, reference, normalize, energy_cutoff
     )
 
     n_confs = len(energy_ref)
@@ -626,9 +629,10 @@ def default_closure(
         accum_grad = torch.zeros_like(params) if compute_gradient else None
 
         # We process the dataset per entry, and within each entry we process conformers in batches.
-        for entry in dataset:
-            smiles = entry["smiles"]
-            topology = topologies[smiles]
+        entry_iterator = tqdm(dataset, desc="Evaluating entries", leave=False) if n_entries > 1 else dataset
+        for entry in entry_iterator:
+            entry_id = entry["id"]
+            topology = topologies[entry_id]
 
             entry_loss, entry_grad, entry_energy_loss, entry_force_loss = (
                 _process_entry(

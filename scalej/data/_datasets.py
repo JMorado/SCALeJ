@@ -2,17 +2,17 @@
 
 from pathlib import Path
 
+import descent.targets.energy
 import numpy as np
 import torch
-import descent.targets.energy
-
 
 
 def create_from_scalej(
     arrow_path: Path | str,
     stride: int = 1,
 ) -> descent.targets.energy.Entry:
-    """Load a per-run Arrow IPC file and return an energy target Entry.
+    """
+    Load a per-run Arrow IPC file and return an energy target Entry.
 
     The file is expected to have been written by ``convert_npz_to_parquet.py``
     (one row per system) with columns ``smiles``, ``coords``, ``box_vectors``,
@@ -53,7 +53,11 @@ def create_from_scalej(
     n_dof = len(coords_flat) // n_frames
     coords = coords_flat.reshape(n_frames, n_dof // 3, 3)
     forces = forces_flat.reshape(n_frames, n_dof // 3, 3)
-    box = np.array(box_flat, dtype=np.float64).reshape(n_frames, 3, 3) if box_flat is not None else None
+    box = (
+        np.array(box_flat, dtype=np.float64).reshape(n_frames, 3, 3)
+        if box_flat is not None
+        else None
+    )
 
     if stride > 1:
         idxs = np.arange(0, n_frames, stride)
@@ -64,9 +68,12 @@ def create_from_scalej(
             box = box[idxs]
 
     return {
+        "id": row.get("id"),
         "smiles": row["smiles"],
         "coords": torch.tensor(coords, dtype=torch.float64),
         "energy": torch.tensor(energy, dtype=torch.float64),
         "forces": torch.tensor(forces, dtype=torch.float64),
-        "box_vectors": torch.tensor(box, dtype=torch.float64) if box is not None else None,
+        "box_vectors": torch.tensor(box, dtype=torch.float64)
+        if box is not None
+        else None,
     }

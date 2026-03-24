@@ -4,7 +4,7 @@ import openmm.unit
 import pytest
 import smee.mm
 
-from scalej.simulation._mlp import setup_mlp_simulation
+from scalej.simulation.mlp import setup_mlp_simulation
 
 
 @pytest.fixture(scope="module")

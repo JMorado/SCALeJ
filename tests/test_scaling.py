@@ -151,48 +151,42 @@ class TestScaleMoleculePositions:
 
 class TestCreateScaledConfigurations:
     def test_single_frame(self, water_system, water_dimer_coords, water_dimer_box):
-        from scalej.types import ScalingResult
-
         tensor_system, _, _ = water_system
         scales = np.array([0.9, 1.0, 1.1])
-        result = create_scaled_configurations(
+        coords, box_vectors, scale_factors = create_scaled_configurations(
             tensor_system, water_dimer_coords, water_dimer_box, scales
         )
-        assert isinstance(result, ScalingResult)
-        assert len(result.coords) == len(scales)
-        assert len(result.box_vectors) == len(scales)
-        assert len(result.scale_factors) == len(scales)
-        for coords in result.coords:
-            assert coords.shape == water_dimer_coords.shape
+        assert len(coords) == len(scales)
+        assert len(box_vectors) == len(scales)
+        assert len(scale_factors) == len(scales)
+        for c in coords:
+            assert c.shape == water_dimer_coords.shape
 
     def test_single_frame_identity_scale(
         self, water_system, water_dimer_coords, water_dimer_box
     ):
         tensor_system, _, _ = water_system
-        result = create_scaled_configurations(
+        coords, box_vectors, _sf = create_scaled_configurations(
             tensor_system, water_dimer_coords, water_dimer_box, np.array([1.0])
         )
-        assert result.coords[0] == pytest.approx(water_dimer_coords)
-        assert result.box_vectors[0] == pytest.approx(water_dimer_box)
+        assert coords[0] == pytest.approx(water_dimer_coords)
+        assert box_vectors[0] == pytest.approx(water_dimer_box)
 
     def test_multiframe(
         self, water_system, water_dimer_coords_multiframe, water_dimer_box_multiframe
     ):
-        from scalej.types import ScalingResult
-
         tensor_system, _, _ = water_system
         scales = np.array([0.9, 1.1])
         n_frames = water_dimer_coords_multiframe.shape[0]
-        result = create_scaled_configurations(
+        coords, box_vectors, scale_factors = create_scaled_configurations(
             tensor_system,
             water_dimer_coords_multiframe,
             water_dimer_box_multiframe,
             scales,
         )
-        assert isinstance(result, ScalingResult)
-        assert len(result.coords) == len(scales) * n_frames
-        assert len(result.box_vectors) == len(scales) * n_frames
-        for coords in result.coords:
-            assert coords.shape == water_dimer_coords_multiframe.shape[1:]
+        assert len(coords) == len(scales) * n_frames
+        assert len(box_vectors) == len(scales) * n_frames
+        for c in coords:
+            assert c.shape == water_dimer_coords_multiframe.shape[1:]
         expected_sf = np.repeat(scales, n_frames)
-        assert result.scale_factors == pytest.approx(expected_sf)
+        assert scale_factors == pytest.approx(expected_sf)

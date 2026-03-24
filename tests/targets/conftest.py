@@ -34,7 +34,7 @@ FORCES = _RNG.standard_normal((N_CONFORMERS, N_ATOMS, 3)) * 0.5
 @pytest.fixture(scope="module")
 def water_system():
     """TensorSystem, TensorForceField, and topologies for a 2-water system."""
-    from scalej.simulation._systems import create_system_from_smiles
+    from scalej.simulation.systems import create_system_from_smiles
 
     tensor_system, tensor_forcefield, topologies = create_system_from_smiles(
         smiles_list=["O"],
@@ -50,6 +50,7 @@ def condensed_dataset():
     import torch
 
     entry: descent.targets.energy.Entry = {
+        "id": "water",
         "smiles": "water",
         "coords": torch.tensor(COORDS, dtype=torch.float64),
         "energy": torch.tensor(ENERGIES, dtype=torch.float64),

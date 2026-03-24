@@ -146,8 +146,6 @@ class TrainingConfig(BaseModel):
         Learning rate for optimizer.
     n_epochs : int
         Number of training epochs.
-    device : str
-        Device to use for training ('cuda' or 'cpu').
     energy_weight : float
         Weight for energy loss term.
     force_weight : float
@@ -162,9 +160,6 @@ class TrainingConfig(BaseModel):
         0.01, description="Learning rate for optimizer."
     )
     n_epochs: int = pydantic.Field(100, description="Number of training epochs.")
-    device: str = pydantic.Field(
-        "cuda", description="Device to use for training ('cuda' or 'cpu')."
-    )
     energy_weight: float = pydantic.Field(
         1.0, description="Weight for energy loss term."
     )

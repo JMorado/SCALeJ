@@ -8,11 +8,13 @@ import pytest
 import torch
 
 from scalej.data._io import (
+    load_arrow,
     load_dataset,
     load_json,
     load_object,
     load_parquet,
     load_pickle,
+    save_arrow,
     save_dataset,
     save_json,
     save_object,
@@ -104,10 +106,9 @@ class TestSaveLoadDataset:
         loaded = load_dataset(path)
         loaded.set_format("torch")
 
-        print(loaded.column_names)
-
         assert len(loaded) == len(simple_dataset)
         assert set(loaded.column_names) == {
+            "id",
             "smiles",
             "coords",
             "box_vectors",
@@ -192,5 +193,38 @@ class TestSaveLoadJson:
     def test_load_missing_file_raises(self, tmp_path):
         with pytest.raises(FileNotFoundError):
             load_json(tmp_path / "missing.json")
+
+
+class TestSaveLoadArrow:
+    @pytest.fixture()
+    def simple_df(self):
+        return pd.DataFrame(
+            {"x": [1.0, 2.0, 3.0], "y": [-0.5, 0.0, 0.5], "label": ["a", "b", "c"]}
+        )
+
+    def test_roundtrip(self, simple_df, tmp_path):
+        path = tmp_path / "data.arrow"
+        save_arrow(simple_df, path)
+        loaded = load_arrow(path)
+
+        pd.testing.assert_frame_equal(loaded, simple_df)
+        assert loaded.shape == simple_df.shape
+        assert list(loaded.columns) == ["x", "y", "label"]
+
+    def test_creates_parent_dirs(self, simple_df, tmp_path):
+        path = tmp_path / "nested" / "deep" / "data.arrow"
+        save_arrow(simple_df, path)
+        assert path.exists()
+
+    def test_load_missing_file_raises(self, tmp_path):
+        with pytest.raises(FileNotFoundError):
+            load_arrow(tmp_path / "missing.arrow")
+
+    def test_numeric_precision(self, tmp_path):
+        df = pd.DataFrame({"val": [1.23456789012345, -9.87654321098765]})
+        path = tmp_path / "precise.arrow"
+        save_arrow(df, path)
+        loaded = load_arrow(path)
+        pd.testing.assert_frame_equal(loaded, df)
 
 
