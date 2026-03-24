@@ -472,9 +472,7 @@ def _process_entry(
         forces_var,
         ref_coords,
         ref_box_vectors,
-    ) = _prepare_entry_data(
-        entry, topology, reference, normalize, energy_cutoff
-    )
+    ) = _prepare_entry_data(entry, topology, reference, normalize, energy_cutoff)
 
     n_confs = len(energy_ref)
 
@@ -624,40 +622,36 @@ def default_closure(
             )
 
         total_loss = torch.zeros(1, device=params.device, dtype=params.dtype)
-        total_energy_loss = torch.zeros(1, device=params.device, dtype=params.dtype)
-        total_force_loss = torch.zeros(1, device=params.device, dtype=params.dtype)
         accum_grad = torch.zeros_like(params) if compute_gradient else None
 
         # We process the dataset per entry, and within each entry we process conformers in batches.
-        entry_iterator = tqdm(dataset, desc="Evaluating entries", leave=False) if n_entries > 1 else dataset
+        entry_iterator = (
+            tqdm(dataset, desc="Evaluating entries", leave=False)
+            if n_entries > 1
+            else dataset
+        )
         for entry in entry_iterator:
             entry_id = entry["id"]
             topology = topologies[entry_id]
 
-            entry_loss, entry_grad, entry_energy_loss, entry_force_loss = (
-                _process_entry(
-                    entry,
-                    topology,
-                    trainable,
-                    params,
-                    reference,
-                    energy_weight,
-                    force_weight,
-                    batch_size,
-                    normalize,
-                    compute_gradient,
-                    energy_cutoff,
-                )
+            entry_loss, entry_grad, _, _ = _process_entry(
+                entry,
+                topology,
+                trainable,
+                params,
+                reference,
+                energy_weight,
+                force_weight,
+                batch_size,
+                normalize,
+                compute_gradient,
+                energy_cutoff,
             )
             total_loss = total_loss + entry_loss
-            total_energy_loss = total_energy_loss + entry_energy_loss
-            total_force_loss = total_force_loss + entry_force_loss
             if compute_gradient and entry_grad is not None:
                 accum_grad.add_(entry_grad)
 
         total_loss = total_loss / n_entries
-        total_energy_loss = total_energy_loss / n_entries
-        total_force_loss = total_force_loss / n_entries
 
         if compute_gradient and accum_grad is not None:
             accum_grad = accum_grad / n_entries

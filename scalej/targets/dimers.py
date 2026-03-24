@@ -8,7 +8,6 @@ import descent.train
 import descent.utils.dataset
 import descent.utils.loss
 import smee
-import smee.utils
 import torch
 
 from .condensed import ReferenceMode
@@ -77,7 +76,6 @@ def default_closure(
         _x = _x.abs()
         force_field = trainable.to_force_field(_x)
         total_loss = torch.zeros(1, dtype=_x.dtype, device=_x.device).squeeze()
-        total_energy_loss = torch.zeros(1, dtype=_x.dtype, device=_x.device).squeeze()
 
         for dimer in descent.utils.dataset.iter_dataset(dataset):
             y_ref, y_pred = descent.targets.dimers._predict(
@@ -110,7 +108,6 @@ def default_closure(
 
             dimer_loss = ((y_pred_rel - y_ref_rel) ** 2).mean() / energy_var
             total_loss = total_loss + dimer_loss
-            total_energy_loss = total_energy_loss + dimer_loss
 
         return total_loss / len(dataset)
 

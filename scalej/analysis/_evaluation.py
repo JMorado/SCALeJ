@@ -2,7 +2,6 @@
 
 import logging
 from pathlib import Path
-from typing import Any
 
 import datasets
 import numpy as np
@@ -11,7 +10,7 @@ import smee
 import torch
 from tqdm.auto import tqdm
 
-log = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 def compute_metrics(
@@ -83,207 +82,6 @@ def compute_metrics(
     )
 
     return energy_mae, energy_rmse, energy_r2, forces_mae, forces_rmse, forces_r2
-
-
-def compute_metrics_from_arrays(
-    energy_ref: np.ndarray,
-    energy_pred: np.ndarray,
-    forces_ref: np.ndarray,
-    forces_pred: np.ndarray,
-) -> tuple[float, float, float, float, float, float]:
-    """Compute error metrics from numpy arrays.
-
-    Parameters
-    ----------
-    energy_ref : np.ndarray
-        Reference energies.
-    energy_pred : np.ndarray
-        Predicted energies.
-    forces_ref : np.ndarray
-        Reference forces.
-    forces_pred : np.ndarray
-        Predicted forces.
-
-    Returns
-    -------
-    tuple[float, float, float, float, float, float]
-        ``(energy_mae, energy_rmse, energy_r2, forces_mae, forces_rmse, forces_r2)``.
-    """
-    # Flatten forces if needed
-    forces_ref_flat = forces_ref.flatten()
-    forces_pred_flat = forces_pred.flatten()
-
-    # Energy metrics
-    energy_mae = float(np.mean(np.abs(energy_pred - energy_ref)))
-    energy_rmse = float(np.sqrt(np.mean((energy_pred - energy_ref) ** 2)))
-
-    energy_var = np.var(energy_ref)
-    if energy_var > 0:
-        energy_r2 = float(
-            1
-            - np.sum((energy_ref - energy_pred) ** 2)
-            / np.sum((energy_ref - np.mean(energy_ref)) ** 2)
-        )
-    else:
-        energy_r2 = 0.0
-
-    # Force metrics
-    forces_mae = float(np.mean(np.abs(forces_pred_flat - forces_ref_flat)))
-    forces_rmse = float(np.sqrt(np.mean((forces_pred_flat - forces_ref_flat) ** 2)))
-
-    forces_var = np.var(forces_ref_flat)
-    if forces_var > 0:
-        forces_r2 = float(
-            1
-            - np.sum((forces_ref_flat - forces_pred_flat) ** 2)
-            / np.sum((forces_ref_flat - np.mean(forces_ref_flat)) ** 2)
-        )
-    else:
-        forces_r2 = 0.0
-
-    return energy_mae, energy_rmse, energy_r2, forces_mae, forces_rmse, forces_r2
-
-
-def run_thermo_benchmark(
-    force_field: smee.TensorForceField,
-    topologies: dict[str, Any],
-    smiles_a: str,
-    smiles_b: str | None = None,
-    density_ref: float | None = None,
-    hvap_ref: float | None = None,
-    temperature: float = 298.15,
-    pressure: float = 1.0,
-    output_dir: Path | str = Path("./predictions"),
-    cache_dir: Path | str | None = Path("./cache"),
-) -> tuple[
-    float | None, float | None, float | None, float | None, float | None, float | None
-]:
-    """Run thermodynamic benchmark for density and heat of vaporization.
-
-    Uses descent.targets.thermo to compute thermodynamic properties
-    and compare against reference values.
-
-    Parameters
-    ----------
-    force_field : smee.TensorForceField
-        Force field to use for predictions.
-    topologies : dict
-        Dictionary of topologies {smiles: topology}.
-    smiles_a : str
-        SMILES string for component A.
-    smiles_b : str, optional
-        SMILES string for component B (for mixtures).
-    density_ref : float, optional
-        Reference density [g/mL].
-    hvap_ref : float, optional
-        Reference heat of vaporization [kcal/mol].
-    temperature : float
-        Temperature in K.
-    pressure : float
-        Pressure in atm.
-    output_dir : Path | str
-        Directory for output files.
-    cache_dir : Path | str, optional
-        Directory for cache files.
-
-    Returns
-    -------
-    tuple[float | None, float | None, float | None, float | None, float | None, float | None]
-        ``(density_ref, density_pred, density_std, hvap_ref, hvap_pred, hvap_std)``.
-
-    Examples
-    --------
-    >>> result = run_thermo_benchmark(
-    ...     force_field, topologies, "CCO",
-    ...     density_ref=0.789, hvap_ref=10.1
-    ... )
-    >>> density_ref, density_pred, density_std, hvap_ref, hvap_pred, hvap_std = result
-    """
-    import descent.targets.thermo
-
-    output_dir = Path(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    if cache_dir is not None:
-        cache_dir = Path(cache_dir)
-        cache_dir.mkdir(parents=True, exist_ok=True)
-
-    x_a = 1.0
-    x_b = None
-
-    entries = []
-
-    # Density entry
-    if density_ref is not None:
-        entries.append(
-            {
-                "type": "density",
-                "smiles_a": smiles_a,
-                "x_a": x_a,
-                "smiles_b": smiles_b,
-                "x_b": x_b,
-                "temperature": temperature,
-                "pressure": pressure,
-                "value": density_ref,
-                "std": 0.0,
-                "units": "g/mL",
-                "source": "benchmark",
-            }
-        )
-
-    # Hvap entry
-    if hvap_ref is not None:
-        entries.append(
-            {
-                "type": "hvap",
-                "smiles_a": smiles_a,
-                "x_a": x_a,
-                "smiles_b": smiles_b,
-                "x_b": x_b,
-                "temperature": temperature,
-                "pressure": pressure,
-                "value": hvap_ref,
-                "std": 0.0,
-                "units": "kcal/mol",
-                "source": "benchmark",
-            }
-        )
-
-    if not entries:
-        return None, None, None, None, None, None
-
-    # Create dataset and run predictions
-    dataset = descent.targets.thermo.create_dataset(*entries)
-
-    results = descent.targets.thermo.predict(
-        dataset,
-        force_field,
-        topologies,
-        output_dir,
-        cached_dir=cache_dir,
-        verbose=True,
-    )
-
-    # Parse results
-    d_ref, d_pred, d_std = None, None, None
-    h_ref, h_pred, h_std = None, None, None
-
-    if isinstance(results, tuple) and len(results) == 4:
-        y_true, y_true_std, y_pred, y_pred_std = results
-
-        idx = 0
-        if density_ref is not None:
-            d_ref = float(y_true[idx])
-            d_pred = float(y_pred[idx])
-            d_std = float(y_pred_std[idx])
-            idx += 1
-
-        if hvap_ref is not None:
-            h_ref = float(y_true[idx])
-            h_pred = float(y_pred[idx])
-            h_std = float(y_pred_std[idx])
-
-    return d_ref, d_pred, d_std, h_ref, h_pred, h_std
 
 
 def evaluate_force_field(
@@ -412,7 +210,12 @@ def save_prediction_parquet(
     # Group conformers by entry (system/mixture)
     conf_idx = 0
     for entry_idx, (mask_idxs, entry_id) in enumerate(
-        tqdm(zip(all_mask_idxs, all_entry_ids, strict=True), total=len(all_entry_ids), desc="Saving predictions", leave=False)
+        tqdm(
+            zip(all_mask_idxs, all_entry_ids, strict=True),
+            total=len(all_entry_ids),
+            desc="Saving predictions",
+            leave=False,
+        )
     ):
         n_conf_filtered = len(mask_idxs)
 
@@ -453,4 +256,4 @@ def save_prediction_parquet(
     output_dir.mkdir(parents=True, exist_ok=True)
     out_path = output_dir / f"{tag}_evaluations.parquet"
     save_parquet(pd.DataFrame(rows), out_path)
-    log.info(f"Saved {tag} predictions -> '{out_path}'")
+    LOGGER.info(f"Saved {tag} predictions -> '{out_path}'")

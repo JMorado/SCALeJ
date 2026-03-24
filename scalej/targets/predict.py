@@ -8,7 +8,7 @@ import smee
 import torch
 from tqdm.auto import tqdm
 
-log = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 def predict_energies_forces(
@@ -58,7 +58,7 @@ def predict_energies_forces(
     mask_idxs_all = []
     entry_ids_all = []
 
-    for _, entry in enumerate(tqdm(dataset, desc="Predicting energies/forces", leave=False)):
+    for entry in tqdm(dataset, desc="Predicting energies/forces", leave=False):
         entry_id = entry["id"]
         topology = tensor_systems[entry_id]
 
@@ -100,7 +100,7 @@ def predict_energies_forces(
             mask = (energy_ref - energy_ref.min()) <= energy_cutoff
             valid_idxs = mask.nonzero(as_tuple=True)[0].tolist()
             if len(valid_idxs) == 0:
-                log.warning(
+                LOGGER.warning(
                     f"Entry {entry_id}: no conformers pass energy cutoff, skipping"
                 )
                 mask_idxs_all.append([])
@@ -162,12 +162,8 @@ def predict_energies_forces(
             ref_data_energy = torch.tensor(
                 0.0, device=energy_ref.device, dtype=energy_ref.dtype
             )
-        elif ref_idx is not None:
-            ref_data_energy = energy_ref_full[ref_idx]
         else:
-            ref_data_energy = torch.tensor(
-                0.0, device=energy_ref.device, dtype=energy_ref.dtype
-            )
+            ref_data_energy = energy_ref_full[ref_idx]
 
         energy_ref = (energy_ref - ref_data_energy).detach()
 
@@ -177,9 +173,7 @@ def predict_energies_forces(
 
         conformer_iterator = zip(
             coords_all,
-            [None] * len(coords_all)
-            if box_vectors_all is None
-            else box_vectors_all,
+            [None] * len(coords_all) if box_vectors_all is None else box_vectors_all,
             strict=True,
         )
         if len(coords_all) > 1:
@@ -190,7 +184,7 @@ def predict_energies_forces(
                 leave=False,
             )
 
-        for _, (coords, box_vectors) in enumerate(conformer_iterator):
+        for coords, box_vectors in conformer_iterator:
             # Ensure tensors are on the correct device
             coords = smee.utils.tensor_like(
                 coords, force_field.potentials[0].parameters
@@ -199,8 +193,6 @@ def predict_energies_forces(
                 box_vectors = smee.utils.tensor_like(
                     box_vectors, force_field.potentials[0].parameters
                 )
-
-            coords.requires_grad_(True)
 
             # Compute energy
             energy_pred = smee.compute_energy(

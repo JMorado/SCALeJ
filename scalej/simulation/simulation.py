@@ -160,7 +160,7 @@ def load_trajectory_frames_smee(
     box_vectors_list = []
 
     with open(trajectory_path, "rb") as f:
-        for coord, box_vector, _, kinetic in tqdm(
+        for coord, box_vector, _, _ in tqdm(
             smee.mm._reporters.unpack_frames(f), desc="Loading trajectory"
         ):
             coords_list.append(coord)
