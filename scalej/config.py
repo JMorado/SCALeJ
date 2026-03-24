@@ -152,7 +152,7 @@ class TrainingConfig(BaseModel):
         Weight for energy loss term.
     force_weight : float
         Weight for force loss term.
-    reference : Literal["mean", "min", "none"]
+    reference : Literal["mean", "min", "none", "infinite"]
         Reference energy mode for relative energies.
     normalize : bool
         Whether to normalize losses by number of conformers/atoms.
@@ -169,7 +169,7 @@ class TrainingConfig(BaseModel):
         1.0, description="Weight for energy loss term."
     )
     force_weight: float = pydantic.Field(1.0, description="Weight for force loss term.")
-    reference: Literal["mean", "min", "none"] = pydantic.Field(
+    reference: Literal["mean", "min", "none", "infinite"] = pydantic.Field(
         "none", description="Reference energy mode for relative energies."
     )
     normalize: bool = pydantic.Field(
@@ -184,6 +184,16 @@ class TrainingConfig(BaseModel):
     weighting_temperature: OpenMMQuantity[_KELVIN] = pydantic.Field(
         300.0 * _KELVIN,
         description="Temperature in Kelvin for Boltzmann weighting.",
+    )
+    conformer_batch_size: int = pydantic.Field(
+        2,
+        description=(
+            "Number of conformers to process at once within each entry before "
+            "accumulating gradients."
+        ),
+    )
+    compute_forces: bool = pydantic.Field(
+        True, description="Whether to compute forces."
     )
 
 
@@ -247,90 +257,4 @@ class SystemConfig(BaseModel):
         description=(
             "Number of molecules for each component (populated during workflow)."
         ),
-    )
-
-
-class GeneralConfig(BaseModel):
-    """
-    Configuration for molecular system setup.
-
-    Attributes
-    ----------
-    systems : list[SystemConfig]
-        List of mixtures/systems to simulate and optimize.
-    force_field_name : str
-        Force field file name (shared across all systems).
-    ml_potential_name : str
-        ML potential model name (shared across all systems).
-    output_dir : str
-        Directory for output files.
-    """
-
-    systems: list[SystemConfig] = pydantic.Field(
-        ..., description="List of mixtures/systems to simulate and optimize."
-    )
-    force_field_name: str = pydantic.Field(
-        "de-force-1.0.3.offxml", description="Force field file name."
-    )
-    mlp_name: str = pydantic.Field(
-        "mace-off24-medium", description="ML potential model name."
-    )
-    output_dir: str = pydantic.Field(
-        "output", description="Directory for output files."
-    )
-    trajectory_path: str | None = pydantic.Field(
-        None, description="Global path to existing trajectory file (fallback)."
-    )
-
-
-class ParameterConfig(BaseModel):
-    """
-    Configuration for trainable parameters.
-
-    Attributes
-    ----------
-    cols : list of str
-        Parameter column names to train.
-    scales : dict of {str: float}
-        Scaling factors for each parameter.
-    limits : dict of {str: tuple of (float or None, float or None)}
-        (min, max) limits for each parameter.
-    """
-
-    cols: list[str] = pydantic.Field(
-        default_factory=lambda: ["epsilon", "r_min"],
-        description="Parameter column names to train.",
-    )
-    scales: dict[str, float] = pydantic.Field(
-        default_factory=lambda: {"epsilon": 10.0, "r_min": 1.0},
-        description="Scaling factors for each parameter.",
-    )
-    limits: dict[str, tuple[float | None, float | None]] = pydantic.Field(
-        default_factory=lambda: {"epsilon": (None, None), "r_min": (0.0, None)},
-        description="(min, max) limits for each parameter.",
-    )
-
-
-class AttributeConfig(BaseModel):
-    """
-    Configuration for trainable attributes.
-
-    Attributes
-    ----------
-    cols : list of str
-        Attribute column names to train.
-    scales : dict of {str: float}
-        Scaling factors for each attribute.
-    limits : dict of {str: tuple of (float or None, float or None)}
-        (min, max) limits for each attribute.
-    """
-
-    cols: list[str] = pydantic.Field(
-        default_factory=list, description="Attribute column names to train."
-    )
-    scales: dict[str, float] = pydantic.Field(
-        default_factory=dict, description="Scaling factors for each attribute."
-    )
-    limits: dict[str, tuple[float | None, float | None]] = pydantic.Field(
-        default_factory=dict, description="(min, max) limits for each attribute."
     )
