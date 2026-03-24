@@ -3,79 +3,123 @@
 import pytest
 import torch
 
-from scalej.targets.dimers import default_closure
+from scalej.targets.dimers import _get_reference, default_closure
+
+
+
+@pytest.mark.parametrize(
+    "mode, expected_val, expected_idx",
+    [
+        ("mean", -1.625, None),
+        ("min", -3.0, 0),
+        ("infinite", -0.5, -1),
+    ],
+)
+def test_get_reference_known_modes(mode, expected_val, expected_idx):
+    energies = torch.tensor([-3.0, -1.0, -2.0, -0.5], dtype=torch.float64)
+    val, idx = _get_reference(energies, mode)
+    assert float(val) == pytest.approx(expected_val)
+    assert idx == expected_idx
+
+
+def test_get_reference_none_mode():
+    energies = torch.tensor([-3.0, -1.0, -2.0, -0.5], dtype=torch.float64)
+    val, idx = _get_reference(energies, "none")
+    assert float(val) == pytest.approx(0.0)
+    assert idx is None
+
+
+def test_get_reference_invalid_mode():
+    energies = torch.tensor([-3.0, -1.0, -2.0, -0.5], dtype=torch.float64)
+    with pytest.raises(ValueError, match="Invalid reference mode"):
+        _get_reference(energies, "bogus")
+
+
+def test_get_reference_zero_variance_guard():
+    """Constant energies -> var==0 must not produce NaN loss."""
+    energies = torch.tensor([1.0, 1.0, 1.0], dtype=torch.float64)
+    ref_val, _ = _get_reference(energies, "mean")
+    y_ref_rel = (energies - ref_val).detach()
+    energy_var = torch.var(y_ref_rel)
+    if energy_var == 0:
+        energy_var = energy_var.new_ones(1).squeeze()
+    loss = (y_ref_rel**2).mean() / energy_var
+    assert torch.isfinite(loss)
+
 
 
 class TestDimerDefaultClosure:
-    @pytest.fixture(autouse=True)
-    def _setup(self, dimer_dataset, dimer_topologies, dimer_trainable):
-        self.dataset = dimer_dataset
-        self.topologies = dimer_topologies
-        self.trainable = dimer_trainable
-        self.params = dimer_trainable.to_values().detach().requires_grad_(True)
-
-    def test_returns_callable(self):
-        closure = default_closure(self.trainable, self.topologies, self.dataset)
+    def test_closure_interface(
+        self, dimer_dataset, dimer_topologies, dimer_trainable
+    ):
+        params = dimer_trainable.to_values().detach().requires_grad_(True)
+        closure = default_closure(dimer_trainable, dimer_topologies, dimer_dataset)
         assert callable(closure)
 
-    def test_closure_returns_three_elements(self):
-        closure = default_closure(self.trainable, self.topologies, self.dataset)
-        result = closure(self.params, compute_gradient=True, compute_hessian=False)
+        result = closure(params, compute_gradient=True, compute_hessian=False)
         assert len(result) == 3
 
-    def test_loss_is_scalar_non_negative(self):
-        closure = default_closure(self.trainable, self.topologies, self.dataset)
-        loss, _, _ = closure(self.params, compute_gradient=False, compute_hessian=False)
+    def test_closure_loss_properties(
+        self, dimer_dataset, dimer_topologies, dimer_trainable
+    ):
+        params = dimer_trainable.to_values().detach().requires_grad_(True)
+        closure = default_closure(dimer_trainable, dimer_topologies, dimer_dataset)
+        loss, _, hess = closure(params, compute_gradient=True, compute_hessian=False)
+
         assert loss.ndim == 0 or (loss.ndim == 1 and loss.shape[0] == 1)
         assert loss.item() >= 0.0
-
-    def test_loss_is_detached(self):
-        closure = default_closure(self.trainable, self.topologies, self.dataset)
-        loss, _, _ = closure(self.params, compute_gradient=True, compute_hessian=False)
         assert not loss.requires_grad
-
-    def test_gradient_shape(self):
-        closure = default_closure(self.trainable, self.topologies, self.dataset)
-        _, grad, _ = closure(self.params, compute_gradient=True, compute_hessian=False)
-        assert grad is not None
-        assert grad.shape == self.params.shape
-
-    def test_no_gradient_when_not_requested(self):
-        closure = default_closure(self.trainable, self.topologies, self.dataset)
-        _, grad, _ = closure(self.params, compute_gradient=False, compute_hessian=False)
-        assert grad is None
-
-    def test_hessian_is_none(self):
-        closure = default_closure(self.trainable, self.topologies, self.dataset)
-        _, _, hess = closure(self.params, compute_gradient=False, compute_hessian=False)
         assert hess is None
 
-    @pytest.mark.parametrize("reference", ["mean", "min", "infinite"])
-    def test_reference_modes(self, reference):
-        closure = default_closure(
-            self.trainable, self.topologies, self.dataset, reference=reference
+    @pytest.mark.parametrize("compute_gradient", [True, False])
+    def test_gradient_behavior(
+        self, dimer_dataset, dimer_topologies, dimer_trainable, compute_gradient
+    ):
+        params = dimer_trainable.to_values().detach().requires_grad_(True)
+        closure = default_closure(dimer_trainable, dimer_topologies, dimer_dataset)
+        _, grad, _ = closure(
+            params, compute_gradient=compute_gradient, compute_hessian=False
         )
-        loss, grad, _ = closure(self.params, compute_gradient=True, compute_hessian=False)
+        if compute_gradient:
+            assert grad is not None
+            assert grad.shape == params.shape
+        else:
+            assert grad is None
+
+    @pytest.mark.parametrize("reference", ["mean", "min", "infinite"])
+    def test_reference_modes(
+        self, dimer_dataset, dimer_topologies, dimer_trainable, reference
+    ):
+        params = dimer_trainable.to_values().detach().requires_grad_(True)
+        closure = default_closure(
+            dimer_trainable, dimer_topologies, dimer_dataset, reference=reference
+        )
+        loss, grad, _ = closure(params, compute_gradient=True, compute_hessian=False)
         assert loss.item() >= 0.0
         assert grad is not None
 
-    def test_normalize_true_divides_by_variance(self):
-        """Normalized loss should differ from raw (unless var == 1, which is unlikely)."""
+    def test_normalize_true_divides_by_variance(
+        self, dimer_dataset, dimer_topologies, dimer_trainable
+    ):
+        params = dimer_trainable.to_values().detach().requires_grad_(True)
         closure_norm = default_closure(
-            self.trainable, self.topologies, self.dataset, normalize=True
+            dimer_trainable, dimer_topologies, dimer_dataset, normalize=True
         )
         closure_raw = default_closure(
-            self.trainable, self.topologies, self.dataset, normalize=False
+            dimer_trainable, dimer_topologies, dimer_dataset, normalize=False
         )
-        loss_norm, _, _ = closure_norm(self.params, False, False)
-        loss_raw, _, _ = closure_raw(self.params, False, False)
+        loss_norm, _, _ = closure_norm(params, False, False)
+        loss_raw, _, _ = closure_raw(params, False, False)
         assert loss_norm.item() != pytest.approx(loss_raw.item(), rel=1e-3)
 
-    def test_gradient_changes_with_params(self):
-        closure = default_closure(self.trainable, self.topologies, self.dataset)
-        _, grad_a, _ = closure(self.params, compute_gradient=True, compute_hessian=False)
+    def test_gradient_changes_with_params(
+        self, dimer_dataset, dimer_topologies, dimer_trainable
+    ):
+        params = dimer_trainable.to_values().detach().requires_grad_(True)
+        closure = default_closure(dimer_trainable, dimer_topologies, dimer_dataset)
+        _, grad_a, _ = closure(params, compute_gradient=True, compute_hessian=False)
 
-        perturbed = self.params.detach().clone() + 0.1
+        perturbed = params.detach().clone() + 0.1
         perturbed.requires_grad_(True)
         _, grad_b, _ = closure(perturbed, compute_gradient=True, compute_hessian=False)
 

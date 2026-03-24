@@ -71,10 +71,15 @@ def water_methane_system():
 @pytest.fixture(scope="module")
 def composite_system():
     """Composite system from two named components (water + methane)."""
+    from scalej.config import MoleculeComponent, SystemConfig
     from scalej.simulation._systems import create_composite_system
 
     config = [
-        {"name": "water", "components": [{"smiles": "O", "nmol": 2}]},
-        {"name": "methane", "components": [{"smiles": "C", "nmol": 3}]},
+        SystemConfig(
+            name="water", components=[MoleculeComponent(smiles="O", nmol=2)]
+        ),
+        SystemConfig(
+            name="methane", components=[MoleculeComponent(smiles="C", nmol=3)]
+        ),
     ]
     return create_composite_system(config)

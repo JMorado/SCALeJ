@@ -34,6 +34,40 @@ class TestCreateSystemFromSmiles:
         assert "vdW" in potentials
         assert "Electrostatics" in potentials
 
+    def test_charge_assignment_callback_is_called(self):
+        """Callback is invoked once per SMILES and its charges propagate to the FF.
+
+        We assign custom charges O=-0.8 e, H=+0.4 e, H=+0.4 e and verify that
+        the resulting TensorForceField Electrostatics parameters match exactly.
+        """
+        import torch
+        from openff.units import unit as off_unit
+
+        from scalej.simulation._systems import create_system_from_smiles
+
+        custom_q = [-0.8, 0.4, 0.4]  # e
+
+        called_on = []
+
+        def callback(mol):
+            called_on.append(mol)
+            mol.assign_partial_charges("zeros")
+            mol.partial_charges = custom_q * off_unit.elementary_charge
+
+        _, tensor_forcefield, _ = create_system_from_smiles(
+            smiles_list=["O"],
+            nmol_list=[1],
+            charge_assignment_callback=callback,
+        )
+
+        assert len(called_on) == 1  # one SMILES -> callback called exactly once
+
+        charges = tensor_forcefield.potentials_by_type["Electrostatics"].parameters
+        expected = torch.tensor([[q] for q in custom_q], dtype=charges.dtype)
+        assert torch.allclose(charges, expected, atol=1e-6), (
+            f"Expected charges {custom_q}, got {charges.squeeze().tolist()}"
+        )
+
 
 class TestCreateCompositeSystem:
     def test_return_types(self, composite_system):

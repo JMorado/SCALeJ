@@ -1,9 +1,12 @@
 """Data types for SCALeJ."""
 
 import dataclasses
+from typing import Literal
 
 import numpy as np
-import torch
+
+ReferenceMode = Literal["mean", "min", "none", "infinite"]
+WeightingMethod = Literal["uniform", "boltzmann", "mixed"]
 
 
 @dataclasses.dataclass
@@ -39,60 +42,6 @@ class EnergyForceResult:
 
     energies: np.ndarray
     forces: np.ndarray
-
-
-@dataclasses.dataclass
-class PredictionResult:
-    """Result from energy/force prediction with force field.
-
-    Attributes
-    ----------
-    energy_ref : torch.Tensor
-        Reference energies [kcal/mol].
-    energy_pred : torch.Tensor
-        Predicted energies [kcal/mol].
-    forces_ref : torch.Tensor
-        Reference forces [kcal/mol/Å].
-    forces_pred : torch.Tensor
-        Predicted forces [kcal/mol/Å].
-    weights_energy : torch.Tensor
-        Energy weights for loss computation.
-    weights_forces : torch.Tensor
-        Force weights for loss computation.
-    mask_idxs : list[torch.Tensor]
-        Indices of conformers kept after filtering.
-    """
-
-    energy_ref: torch.Tensor
-    energy_pred: torch.Tensor
-    forces_ref: torch.Tensor
-    forces_pred: torch.Tensor
-    weights_energy: torch.Tensor
-    weights_forces: torch.Tensor
-    mask_idxs: list[torch.Tensor]
-
-
-@dataclasses.dataclass
-class TrainingResult:
-    """Result from parameter training optimization.
-
-    Attributes
-    ----------
-    initial_parameters : torch.Tensor
-        Parameters before training.
-    trained_parameters : torch.Tensor
-        Optimized parameters after training.
-    energy_losses : list[float]
-        Energy loss history per epoch.
-    force_losses : list[float]
-        Force loss history per epoch.
-    """
-
-    initial_parameters: torch.Tensor
-    trained_parameters: torch.Tensor
-    energy_losses: list[float]
-    force_losses: list[float]
-    combined_losses: list[float] | None = dataclasses.field(default=None)
 
 
 @dataclasses.dataclass

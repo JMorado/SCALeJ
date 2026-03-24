@@ -6,7 +6,7 @@ import descent.train
 import descent.utils.loss
 import torch
 
-log = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 def run_training_loop(
@@ -19,7 +19,7 @@ def run_training_loop(
     clamp: bool = True,
 ) -> list[float]:
     """
-    Run the Adam training loop and return the per-epoch loss history.
+    Run the Adam training loop.
 
     Parameters
     ----------
@@ -70,6 +70,6 @@ def run_training_loop(
                 msg += f" | {parts}"
             if gnorm_parts:
                 msg += f" | {gnorm_parts}"
-            log.info(msg)
+            LOGGER.info(msg)
 
     return losses

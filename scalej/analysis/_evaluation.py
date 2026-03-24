@@ -314,7 +314,7 @@ def evaluate_force_field(
     ... )
     >>> print(f"Energy R²: {metrics.energy_r2:.4f}")
     """
-    from ..training import predict_energies_forces
+    from ..targets import predict_energies_forces
 
     prediction = predict_energies_forces(
         dataset,
@@ -372,7 +372,7 @@ def save_evaluation_parquets(
     f_pred_np = prediction.forces_pred.detach().cpu().numpy()
 
     for i, entry in enumerate(dataset):
-        id = entry["id"]
+        id = entry["smiles"]
         mask_idxs = prediction.mask_idxs[i]
         n_conf_filtered = len(mask_idxs)
 
@@ -403,8 +403,8 @@ def save_evaluation_parquets(
                     "scale_factor": (
                         scale_factors[conf_idx] if scale_factors else None
                     ),
-                    "energy_ref": float(e_ref[j]),
-                    "energy_pred": float(e_pred[j]),
+                    "energy_ref": float(e_ref[j].item()),
+                    "energy_pred": float(e_pred[j].item()),
                     "forces_ref": f_ref[j].flatten().tolist(),
                     "forces_pred": f_pred[j].flatten().tolist(),
                 }

@@ -41,3 +41,17 @@ class TestExportForcefieldToOffxml:
             for p in base_ff.get_parameter_handler("vdW").parameters
         ]
         assert original_params == after_params
+
+    def test_ep_tag_none_skips_virtual_site_handler(self, water_system, base_ff, tmp_path):
+        """When no EP handler is registered the EP branch is not entered.
+
+        openff-2.0.0.offxml has no VirtualSites handler, so ep_tag should be
+        None and the export should still succeed without touching any EP handler.
+        """
+        _, tensor_ff, _ = water_system
+        out = tmp_path / "no_ep.offxml"
+        result = export_forcefield_to_offxml(base_ff, tensor_ff, out)
+        # Neither DoubleExponentialVirtualSites nor VirtualSites should be registered.
+        assert "VirtualSites" not in result.registered_parameter_handlers
+        assert "DoubleExponentialVirtualSites" not in result.registered_parameter_handlers
+        assert out.exists()

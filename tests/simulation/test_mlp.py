@@ -77,6 +77,20 @@ class TestComputeMlpEnergiesForces:
             ),
         )
 
+    def test_show_progress_runs_without_error(
+        self, ani2x_simulation, initial_coords_box_angstrom
+    ):
+        """show_progress=True should produce the same result (exercises tqdm branch)."""
+        coords, box = initial_coords_box_angstrom
+        result_plain = compute_mlp_energies_forces(
+            ani2x_simulation, [coords], [box], show_progress=False
+        )
+        result_prog = compute_mlp_energies_forces(
+            ani2x_simulation, [coords], [box], show_progress=True
+        )
+        assert result_prog.energies == pytest.approx(result_plain.energies)
+        assert result_prog.forces == pytest.approx(result_plain.forces)
+
     def test_multi_frame(self, ani2x_simulation, initial_coords_box_angstrom):
         coords, box = initial_coords_box_angstrom
         result = compute_mlp_energies_forces(

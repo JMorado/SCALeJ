@@ -155,6 +155,49 @@ def load_parquet(file_path: Path | str) -> pd.DataFrame:
     return _pd.read_parquet(file_path)
 
 
+def save_arrow(df: pd.DataFrame, file_path: Path | str) -> None:
+    """
+    Write a pandas DataFrame to an Arrow IPC file.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Data to write.
+    file_path : Path | str
+        Output ``.arrow`` path.
+    """
+    import pyarrow as pa
+    import pyarrow.ipc as ipc
+
+    file_path = Path(file_path)
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    table = pa.Table.from_pandas(df, preserve_index=False)
+    with ipc.new_file(file_path, table.schema) as writer:
+        writer.write_table(table)
+
+
+def load_arrow(file_path: Path | str) -> pd.DataFrame:
+    """
+    Read an Arrow IPC file into a pandas DataFrame.
+
+    Parameters
+    ----------
+    file_path : Path | str
+        Path to the ``.arrow`` file.
+
+    Returns
+    -------
+    pd.DataFrame
+    """
+    import pyarrow.ipc as ipc
+
+    file_path = Path(file_path)
+    if not file_path.exists():
+        raise FileNotFoundError(f"Arrow file not found: {file_path}")
+    with ipc.open_file(file_path) as reader:
+        return reader.read_pandas()
+
+
 def save_json(obj: Any, file_path: Path | str) -> None:
     """
     Write a JSON-serialisable object to a file.

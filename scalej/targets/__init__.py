@@ -9,6 +9,5 @@ __all__ = [
     "default_closure",
     "ddp_closure",
     "dimer_closure",
-    "predict_energies_forces",
     "normalize_closure_weights",
 ]

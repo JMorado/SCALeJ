@@ -86,7 +86,7 @@ def _prepare_entry_data(
     energy_ref = energy_ref / n_mols
     forces_all = forces_all / n_mols
 
-    # Save pre-filter arrays. These are needed   arrays — needed for "min"/"infinite"
+    # Save pre-filter arrays. These are needed needed for "min"/"infinite"
     # reference which index the original array, and for saving ref conformer coords.
     energy_ref_full = energy_ref
     coords_full = coords_all

@@ -1,16 +1,15 @@
 """Tests for scalej.types dataclasses."""
 
 import pytest
-import torch
 
 from scalej.types import (
     BenchmarkResult,
     EnergyForceResult,
     EvaluationMetrics,
-    PredictionResult,
+    ReferenceMode,
     ScalingResult,
     TrajectoryFrames,
-    TrainingResult,
+    WeightingMethod,
 )
 
 
@@ -19,7 +18,9 @@ class TestScalingResult:
         coords = [[0.0] * 9]
         box_vectors = [[1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]]
         scale_factors = [0.9, 1.0, 1.1]
-        r = ScalingResult(coords=coords, box_vectors=box_vectors, scale_factors=scale_factors)
+        r = ScalingResult(
+            coords=coords, box_vectors=box_vectors, scale_factors=scale_factors
+        )
         assert r.coords is coords
         assert r.box_vectors is box_vectors
         assert r.scale_factors == pytest.approx([0.9, 1.0, 1.1])
@@ -28,72 +29,13 @@ class TestScalingResult:
 class TestEnergyForceResult:
     def test_fields_stored(self):
         import numpy as np
+
         energies = np.array([-1.0, -2.0])
         forces = np.zeros((2, 3, 3))
         r = EnergyForceResult(energies=energies, forces=forces)
         assert list(r.energies) == pytest.approx([-1.0, -2.0])
         assert r.forces.shape == (2, 3, 3)
         assert r.forces.sum() == pytest.approx(0.0)
-
-
-class TestPredictionResult:
-    def _make(self, n=3):
-        return PredictionResult(
-            energy_ref=torch.zeros(n),
-            energy_pred=torch.ones(n),
-            forces_ref=torch.zeros(n, 3),
-            forces_pred=torch.ones(n, 3),
-            weights_energy=torch.full((n,), 1.0 / n),
-            weights_forces=torch.full((n, 1), 1.0 / n),
-            mask_idxs=[torch.arange(n)],
-        )
-
-    def test_fields_stored(self):
-        r = self._make()
-        assert r.energy_ref.shape == (3,)
-        assert r.energy_pred.shape == (3,)
-        assert r.forces_ref.shape == (3, 3)
-        assert r.forces_pred.shape == (3, 3)
-        assert len(r.mask_idxs) == 1
-
-    def test_weights_sum_to_one(self):
-        r = self._make(4)
-        assert r.weights_energy.sum().item() == pytest.approx(1.0)
-
-
-class TestTrainingResult:
-    def test_fields_stored(self):
-        p0 = torch.tensor([1.0, 2.0])
-        p1 = torch.tensor([1.1, 2.1])
-        r = TrainingResult(
-            initial_parameters=p0,
-            trained_parameters=p1,
-            energy_losses=[1.0, 0.5],
-            force_losses=[0.2, 0.1],
-        )
-        torch.testing.assert_close(r.initial_parameters, p0)
-        torch.testing.assert_close(r.trained_parameters, p1)
-        assert r.energy_losses == [1.0, 0.5]
-        assert r.force_losses == [0.2, 0.1]
-
-    def test_combined_losses_default_is_none(self):
-        r = TrainingResult(
-            initial_parameters=torch.zeros(2),
-            trained_parameters=torch.zeros(2),
-            energy_losses=[],
-            force_losses=[],
-        )
-        assert r.combined_losses is None
-
-    def test_combined_losses_can_be_set(self):
-        r = TrainingResult(
-            initial_parameters=torch.zeros(2),
-            trained_parameters=torch.zeros(2),
-            energy_losses=[],
-            force_losses=[],
-            combined_losses=[0.5, 0.3],
-        )
-        assert r.combined_losses == [0.5, 0.3]
 
 
 class TestEvaluationMetrics:
@@ -164,6 +106,7 @@ class TestBenchmarkResult:
 class TestTrajectoryFrames:
     def test_fields_stored(self):
         import numpy as np
+
         coords = np.zeros((5, 6, 3))
         box_vectors = np.stack([np.eye(3)] * 5)
         r = TrajectoryFrames(coords=coords, box_vectors=box_vectors, n_frames=5)
@@ -172,3 +115,13 @@ class TestTrajectoryFrames:
         assert r.coords.sum() == pytest.approx(0.0)
         assert r.box_vectors.shape == (5, 3, 3)
         assert r.box_vectors[0].diagonal().tolist() == pytest.approx([1.0, 1.0, 1.0])
+
+
+class TestTypeAliases:
+    def test_reference_mode_accepts_valid_values(self):
+        valid: list[ReferenceMode] = ["mean", "min", "none", "infinite"]
+        assert len(valid) == 4
+
+    def test_weighting_method_accepts_valid_values(self):
+        valid: list[WeightingMethod] = ["uniform", "boltzmann", "mixed"]
+        assert len(valid) == 3
