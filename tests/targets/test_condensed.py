@@ -13,7 +13,6 @@ from scalej.targets.condensed import (
 )
 
 
-
 class TestPrepareEntryData:
     @pytest.mark.parametrize("reference", ["mean", "min", "none", "infinite"])
     def test_returns_correct_tuple_length(
@@ -217,9 +216,7 @@ class TestComputeReferencePrediction:
             _,
             ref_coords,
             ref_box_vectors,
-        ) = _prepare_entry_data(
-            condensed_dataset[0], topology, "min", normalize=True
-        )
+        ) = _prepare_entry_data(condensed_dataset[0], topology, "min", normalize=True)
         return {
             "topology": topology,
             "trainable": condensed_trainable,
@@ -280,9 +277,7 @@ class TestComputeBatchLoss:
             forces_var,
             _,
             _,
-        ) = _prepare_entry_data(
-            condensed_dataset[0], topology, "min", normalize=True
-        )
+        ) = _prepare_entry_data(condensed_dataset[0], topology, "min", normalize=True)
         return {
             "topology": topology,
             "trainable": condensed_trainable,
@@ -341,14 +336,14 @@ class TestComputeBatchLoss:
 
 class TestProcessEntry:
     def _call(self, entry, topology, trainable, params, **kwargs):
-        defaults = dict(
-            reference="mean",
-            energy_weight=1.0,
-            force_weight=1.0,
-            batch_size=2,
-            normalize=True,
-            compute_gradient=False,
-        )
+        defaults = {
+            "reference": "mean",
+            "energy_weight": 1.0,
+            "force_weight": 1.0,
+            "batch_size": 2,
+            "normalize": True,
+            "compute_gradient": False,
+        }
         defaults.update(kwargs)
         return _process_entry(entry, topology, trainable, params, **defaults)
 
@@ -402,7 +397,6 @@ class TestProcessEntry:
             entry, topology, condensed_trainable, params, batch_size=4
         )
         assert loss_bs1.item() == pytest.approx(loss_bs4.item(), rel=1e-4)
-
 
 
 class TestDefaultClosure:

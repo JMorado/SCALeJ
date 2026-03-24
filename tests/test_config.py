@@ -60,5 +60,3 @@ class TestTrainingConfig:
             TrainingConfig(reference="invalid")
         with pytest.raises(ValidationError):
             TrainingConfig(weighting_method="invalid")
-
-

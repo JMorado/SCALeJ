@@ -32,7 +32,6 @@ def create_from_scalej(
         and ``box_vectors`` (optional), suitable for passing to
         ``descent.targets.energy.create_dataset``.
     """
-    import descent.targets.energy
     import pyarrow.ipc as _ipc
 
     arrow_path = Path(arrow_path)

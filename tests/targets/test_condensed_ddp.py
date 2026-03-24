@@ -27,33 +27,93 @@ _BASE_COORDS = np.array(
 )
 
 # Four conformers with small perturbations (~0.05 Å).
-COORDS = np.array([
-    _BASE_COORDS + np.array([[0.02, -0.01, 0.03], [-0.01, 0.02, -0.01],
-                              [0.01, -0.02, 0.02], [0.03, 0.01, -0.02],
-                              [-0.02, 0.01, 0.01], [0.01, -0.01, -0.03]]),
-    _BASE_COORDS + np.array([[-0.03, 0.02, -0.01], [0.02, -0.01, 0.02],
-                              [-0.01, 0.03, -0.01], [-0.02, -0.01, 0.03],
-                              [0.01, -0.02, -0.02], [-0.01, 0.02, 0.01]]),
-    _BASE_COORDS + np.array([[0.01, 0.01, -0.02], [-0.02, -0.01, 0.01],
-                              [0.03, 0.01, 0.01], [0.01, -0.03, 0.01],
-                              [-0.01, 0.02, -0.01], [0.02, -0.02, 0.02]]),
-    _BASE_COORDS + np.array([[-0.01, 0.03, 0.01], [0.01, -0.02, -0.02],
-                              [-0.02, 0.01, 0.03], [0.02, 0.02, -0.01],
-                              [0.01, -0.01, 0.02], [-0.03, 0.01, -0.01]]),
-])
+COORDS = np.array(
+    [
+        _BASE_COORDS
+        + np.array(
+            [
+                [0.02, -0.01, 0.03],
+                [-0.01, 0.02, -0.01],
+                [0.01, -0.02, 0.02],
+                [0.03, 0.01, -0.02],
+                [-0.02, 0.01, 0.01],
+                [0.01, -0.01, -0.03],
+            ]
+        ),
+        _BASE_COORDS
+        + np.array(
+            [
+                [-0.03, 0.02, -0.01],
+                [0.02, -0.01, 0.02],
+                [-0.01, 0.03, -0.01],
+                [-0.02, -0.01, 0.03],
+                [0.01, -0.02, -0.02],
+                [-0.01, 0.02, 0.01],
+            ]
+        ),
+        _BASE_COORDS
+        + np.array(
+            [
+                [0.01, 0.01, -0.02],
+                [-0.02, -0.01, 0.01],
+                [0.03, 0.01, 0.01],
+                [0.01, -0.03, 0.01],
+                [-0.01, 0.02, -0.01],
+                [0.02, -0.02, 0.02],
+            ]
+        ),
+        _BASE_COORDS
+        + np.array(
+            [
+                [-0.01, 0.03, 0.01],
+                [0.01, -0.02, -0.02],
+                [-0.02, 0.01, 0.03],
+                [0.02, 0.02, -0.01],
+                [0.01, -0.01, 0.02],
+                [-0.03, 0.01, -0.01],
+            ]
+        ),
+    ]
+)
 
 BOX = np.stack([np.eye(3) * 25.0] * N_CONFORMERS)
 ENERGIES = np.array([-100.0, -99.0, -98.0, -97.0])
-FORCES = np.array([
-    [[0.50, -0.30, 0.10], [0.20, 0.40, -0.60], [-0.70, 0.10, 0.50],
-     [0.30, -0.10, 0.20], [0.10, 0.50, -0.30], [-0.40, 0.20, 0.10]],
-    [[0.60, -0.20, 0.40], [0.30, 0.30, -0.50], [-0.90, 0.10, 0.10],
-     [0.40, -0.40, 0.30], [0.20, 0.60, -0.40], [-0.60, 0.30, 0.30]],
-    [[0.40, -0.10, 0.20], [0.10, 0.50, -0.30], [-0.50, 0.20, 0.30],
-     [0.20, -0.20, 0.10], [0.30, 0.40, -0.20], [-0.30, 0.10, 0.20]],
-    [[0.55, -0.25, 0.15], [0.25, 0.35, -0.55], [-0.80, 0.15, 0.40],
-     [0.35, -0.25, 0.25], [0.15, 0.55, -0.35], [-0.50, 0.25, 0.20]],
-])
+FORCES = np.array(
+    [
+        [
+            [0.50, -0.30, 0.10],
+            [0.20, 0.40, -0.60],
+            [-0.70, 0.10, 0.50],
+            [0.30, -0.10, 0.20],
+            [0.10, 0.50, -0.30],
+            [-0.40, 0.20, 0.10],
+        ],
+        [
+            [0.60, -0.20, 0.40],
+            [0.30, 0.30, -0.50],
+            [-0.90, 0.10, 0.10],
+            [0.40, -0.40, 0.30],
+            [0.20, 0.60, -0.40],
+            [-0.60, 0.30, 0.30],
+        ],
+        [
+            [0.40, -0.10, 0.20],
+            [0.10, 0.50, -0.30],
+            [-0.50, 0.20, 0.30],
+            [0.20, -0.20, 0.10],
+            [0.30, 0.40, -0.20],
+            [-0.30, 0.10, 0.20],
+        ],
+        [
+            [0.55, -0.25, 0.15],
+            [0.25, 0.35, -0.55],
+            [-0.80, 0.15, 0.40],
+            [0.35, -0.25, 0.25],
+            [0.15, 0.55, -0.35],
+            [-0.50, 0.25, 0.20],
+        ],
+    ]
+)
 
 
 @pytest.fixture(scope="module")
@@ -112,16 +172,12 @@ class TestDdpClosure:
 
         n_avail = torch.cuda.device_count()
         with pytest.raises(ValueError, match="Requested n_gpus"):
-            ddp_closure(
-                ddp_trainable, ddp_topologies, ddp_dataset, n_gpus=n_avail + 1
-            )
+            ddp_closure(ddp_trainable, ddp_topologies, ddp_dataset, n_gpus=n_avail + 1)
 
     def test_closure_returns_tuple(self, ddp_trainable, ddp_topologies, ddp_dataset):
         from scalej.targets.condensed_ddp import ddp_closure
 
-        closure = ddp_closure(
-            ddp_trainable, ddp_topologies, ddp_dataset, n_gpus=1
-        )
+        closure = ddp_closure(ddp_trainable, ddp_topologies, ddp_dataset, n_gpus=1)
         params = ddp_trainable.to_values().detach().requires_grad_(True)
         result = closure(params, compute_gradient=True, compute_hessian=False)
 
@@ -136,9 +192,7 @@ class TestDdpClosure:
     def test_hessian_raises(self, ddp_trainable, ddp_topologies, ddp_dataset):
         from scalej.targets.condensed_ddp import ddp_closure
 
-        closure = ddp_closure(
-            ddp_trainable, ddp_topologies, ddp_dataset, n_gpus=1
-        )
+        closure = ddp_closure(ddp_trainable, ddp_topologies, ddp_dataset, n_gpus=1)
         params = ddp_trainable.to_values().detach().requires_grad_(True)
 
         with pytest.raises(NotImplementedError, match="Hessian"):
@@ -147,9 +201,7 @@ class TestDdpClosure:
     def test_no_gradient(self, ddp_trainable, ddp_topologies, ddp_dataset):
         from scalej.targets.condensed_ddp import ddp_closure
 
-        closure = ddp_closure(
-            ddp_trainable, ddp_topologies, ddp_dataset, n_gpus=1
-        )
+        closure = ddp_closure(ddp_trainable, ddp_topologies, ddp_dataset, n_gpus=1)
         params = ddp_trainable.to_values().detach().requires_grad_(True)
         loss, grad, _ = closure(params, compute_gradient=False, compute_hessian=False)
 
@@ -159,9 +211,7 @@ class TestDdpClosure:
     def test_loss_finite(self, ddp_trainable, ddp_topologies, ddp_dataset):
         from scalej.targets.condensed_ddp import ddp_closure
 
-        closure = ddp_closure(
-            ddp_trainable, ddp_topologies, ddp_dataset, n_gpus=1
-        )
+        closure = ddp_closure(ddp_trainable, ddp_topologies, ddp_dataset, n_gpus=1)
         params = ddp_trainable.to_values().detach().requires_grad_(True)
         loss, grad, _ = closure(params, compute_gradient=True, compute_hessian=False)
         assert torch.isfinite(loss)

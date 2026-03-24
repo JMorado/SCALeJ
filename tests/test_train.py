@@ -16,10 +16,16 @@ from scalej.train import run_training_loop
 _RNG = np.random.default_rng(42)
 _N_ATOMS = 6
 _N_CONFS = 4
-_BASE_COORDS = np.array([
-    [0.000, 0.000, 0.000], [0.960, 0.000, 0.000], [-0.240, 0.926, 0.000],
-    [5.000, 5.000, 5.000], [5.960, 5.000, 5.000], [4.760, 5.926, 5.000],
-])
+_BASE_COORDS = np.array(
+    [
+        [0.000, 0.000, 0.000],
+        [0.960, 0.000, 0.000],
+        [-0.240, 0.926, 0.000],
+        [5.000, 5.000, 5.000],
+        [5.960, 5.000, 5.000],
+        [4.760, 5.926, 5.000],
+    ]
+)
 _COORDS = _BASE_COORDS + _RNG.standard_normal((_N_CONFS, _N_ATOMS, 3)) * 0.1
 _BOX = np.stack([np.eye(3) * 25.0] * _N_CONFS)
 _ENERGIES = np.array([-100.0, -99.0, -98.0, -97.0])
@@ -67,8 +73,13 @@ def real_closure(train_trainable, train_topologies, train_dataset):
     from scalej.targets.condensed import default_closure
 
     return default_closure(
-        train_trainable, train_topologies, train_dataset,
-        reference="mean", energy_weight=1.0, force_weight=1.0, normalize=True,
+        train_trainable,
+        train_topologies,
+        train_dataset,
+        reference="mean",
+        energy_weight=1.0,
+        force_weight=1.0,
+        normalize=True,
     )
 
 
@@ -102,7 +113,9 @@ def mock_trainable(mocker):
 
 def test_returns_loss_list_of_correct_length(mock_trainable):
     params = torch.tensor([5.0], requires_grad=True)
-    losses = run_training_loop(params, _make_closure(), mock_trainable, n_epochs=10, lr=0.1)
+    losses = run_training_loop(
+        params, _make_closure(), mock_trainable, n_epochs=10, lr=0.1
+    )
     assert len(losses) == 10
 
 

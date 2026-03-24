@@ -1,6 +1,5 @@
 """Tests for scalej.analysis._evaluation."""
 
-import numpy as np
 import pytest
 import torch
 
@@ -195,21 +194,16 @@ class TestSavePredictionParquet:
         # Entry 1: 2 conformers, 2 atoms each -> (2, 2, 3)
         # Entry 2: 1 conformer, 3 atoms each -> (1, 3, 3)
         prediction = (
-            torch.tensor([1.0, 1.1, 2.0]), # energies
+            torch.tensor([1.0, 1.1, 2.0]),  # energies
             torch.tensor([1.05, 1.15, 2.05]),
-            [
-                torch.zeros((2, 2, 3)),
-                torch.ones((1, 3, 3))
-            ], # forces_ref
-            [
-                torch.zeros((2, 2, 3)),
-                torch.ones((1, 3, 3))
-            ], # forces_pred
-            [[0, 1], [0]], # masks
-            ["mol2", "mol3"], # ids
+            [torch.zeros((2, 2, 3)), torch.ones((1, 3, 3))],  # forces_ref
+            [torch.zeros((2, 2, 3)), torch.ones((1, 3, 3))],  # forces_pred
+            [[0, 1], [0]],  # masks
+            ["mol2", "mol3"],  # ids
         )
         save_prediction_parquet(prediction, tmp_path, "hete")
         import pandas as pd
+
         df = pd.read_parquet(tmp_path / "hete_evaluations.parquet")
         assert len(df) == 3
         assert len(df[df["id"] == "mol2"]) == 2
@@ -246,5 +240,3 @@ class TestEvaluateForceField:
         assert prediction is fake_prediction
         assert len(metrics) == 6
         assert all(isinstance(v, float) for v in metrics)
-
-

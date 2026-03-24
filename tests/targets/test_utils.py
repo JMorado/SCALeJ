@@ -33,17 +33,13 @@ def test_user_weights_are_scaled_by_loss():
 
 def test_zero_initial_loss_gives_user_weight():
     closures = {"x": _make_closure(0.0)}
-    result = normalize_closure_weights(
-        closures, torch.zeros(1), weights={"x": 3.0}
-    )
+    result = normalize_closure_weights(closures, torch.zeros(1), weights={"x": 3.0})
     assert result["x"] == pytest.approx(3.0)
 
 
 def test_missing_user_weight_defaults_to_one():
     closures = {"a": _make_closure(4.0), "b": _make_closure(2.0)}
-    result = normalize_closure_weights(
-        closures, torch.zeros(1), weights={"a": 2.0}
-    )
+    result = normalize_closure_weights(closures, torch.zeros(1), weights={"a": 2.0})
     assert result["a"] == pytest.approx(2.0 / 4.0)
     assert result["b"] == pytest.approx(1.0 / 2.0)
 

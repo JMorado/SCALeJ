@@ -164,7 +164,9 @@ class TestIntegrationComputeMlpEnergiesForcesSingle:
         sim = setup_mlp_simulation(
             tensor_system, "ani2x", mlp_device="cpu", platform="CPU"
         )
-        energies, forces = compute_mlp_energies_forces(sim, [coords], [box], show_progress=False)
+        energies, forces = compute_mlp_energies_forces(
+            sim, [coords], [box], show_progress=False
+        )
         assert isinstance(energies, np.ndarray)
         assert energies.shape == (1,)
         assert forces.shape == (1, 6, 3)

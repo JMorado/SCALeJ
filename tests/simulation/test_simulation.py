@@ -66,7 +66,13 @@ class TestLoadTrajectoryFrames:
         ],
     )
     def test_frames_shape(
-        self, tmp_path, mocker, n_frames, from_end, expected_coords_shape, expected_box_shape
+        self,
+        tmp_path,
+        mocker,
+        n_frames,
+        from_end,
+        expected_coords_shape,
+        expected_box_shape,
     ):
         import smee.mm
         import torch
@@ -78,9 +84,7 @@ class TestLoadTrajectoryFrames:
         mocker.patch.object(
             smee.mm._reporters,
             "unpack_frames",
-            side_effect=lambda f: (
-                (c, fake_box, None, None) for c in fake_coords
-            ),
+            side_effect=lambda f: ((c, fake_box, None, None) for c in fake_coords),
         )
 
         dummy_path = tmp_path / "dummy.dcd"
@@ -124,9 +128,7 @@ class TestRunSimulationSmee:
 
         mocker.patch.object(smee.mm, "tensor_reporter", return_value=fake_ctx)
         mocker.patch.object(smee.mm, "simulate")
-        mocker.patch.object(
-            openmm.app, "PDBReporter", return_value=mocker.MagicMock()
-        )
+        mocker.patch.object(openmm.app, "PDBReporter", return_value=mocker.MagicMock())
 
         from scalej.config import SimulationConfig
 

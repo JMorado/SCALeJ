@@ -96,16 +96,20 @@ def dimer_dataset(water_system):
     rng = np.random.default_rng(123)
     n_confs = 2
 
-    base_a = np.array([
-        [0.000, 0.000, 0.000],
-        [0.960, 0.000, 0.000],
-        [-0.240, 0.926, 0.000],
-    ])
-    base_b = np.array([
-        [4.000, 4.000, 4.000],
-        [4.960, 4.000, 4.000],
-        [3.760, 4.926, 4.000],
-    ])
+    base_a = np.array(
+        [
+            [0.000, 0.000, 0.000],
+            [0.960, 0.000, 0.000],
+            [-0.240, 0.926, 0.000],
+        ]
+    )
+    base_b = np.array(
+        [
+            [4.000, 4.000, 4.000],
+            [4.960, 4.000, 4.000],
+            [3.760, 4.926, 4.000],
+        ]
+    )
     base = np.concatenate([base_a, base_b], axis=0)
     coords = base + rng.standard_normal((n_confs, n_atoms, 3)) * 0.05
 

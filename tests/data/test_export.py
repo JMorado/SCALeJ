@@ -1,4 +1,5 @@
 """Tests for exporting force fields to OFFXML format."""
+
 import pytest
 
 from scalej.data._export import export_forcefield_to_offxml
@@ -42,7 +43,9 @@ class TestExportForcefieldToOffxml:
         ]
         assert original_params == after_params
 
-    def test_ep_tag_none_skips_virtual_site_handler(self, water_system, base_ff, tmp_path):
+    def test_ep_tag_none_skips_virtual_site_handler(
+        self, water_system, base_ff, tmp_path
+    ):
         """When no EP handler is registered the EP branch is not entered.
 
         openff-2.0.0.offxml has no VirtualSites handler, so ep_tag should be
@@ -53,5 +56,7 @@ class TestExportForcefieldToOffxml:
         result = export_forcefield_to_offxml(base_ff, tensor_ff, out)
         # Neither DoubleExponentialVirtualSites nor VirtualSites should be registered.
         assert "VirtualSites" not in result.registered_parameter_handlers
-        assert "DoubleExponentialVirtualSites" not in result.registered_parameter_handlers
+        assert (
+            "DoubleExponentialVirtualSites" not in result.registered_parameter_handlers
+        )
         assert out.exists()

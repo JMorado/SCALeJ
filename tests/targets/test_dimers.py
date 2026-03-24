@@ -6,7 +6,6 @@ import torch
 from scalej.targets.dimers import _get_reference, default_closure
 
 
-
 @pytest.mark.parametrize(
     "mode, expected_val, expected_idx",
     [
@@ -47,11 +46,8 @@ def test_get_reference_zero_variance_guard():
     assert torch.isfinite(loss)
 
 
-
 class TestDimerDefaultClosure:
-    def test_closure_interface(
-        self, dimer_dataset, dimer_topologies, dimer_trainable
-    ):
+    def test_closure_interface(self, dimer_dataset, dimer_topologies, dimer_trainable):
         params = dimer_trainable.to_values().detach().requires_grad_(True)
         closure = default_closure(dimer_trainable, dimer_topologies, dimer_dataset)
         assert callable(closure)

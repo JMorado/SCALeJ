@@ -91,12 +91,13 @@ class TestSaveLoadDataset:
     @pytest.fixture()
     def simple_dataset(self, water_dimer_coords, water_dimer_box):
         import descent.targets.energy
+
         entry = {
             "smiles": "O.O",
             "coords": torch.tensor(water_dimer_coords).unsqueeze(0),
             "box_vectors": torch.tensor(water_dimer_box).unsqueeze(0),
             "energy": torch.tensor([-9.42], dtype=torch.float64),
-            "forces": torch.zeros((1, 6, 3))
+            "forces": torch.zeros((1, 6, 3)),
         }
         return descent.targets.energy.create_dataset([entry])
 
@@ -226,5 +227,3 @@ class TestSaveLoadArrow:
         save_arrow(df, path)
         loaded = load_arrow(path)
         pd.testing.assert_frame_equal(loaded, df)
-
-

@@ -100,7 +100,7 @@ def compute_mlp_energies_forces(
     energies = []
     forces = []
 
-    iterator = zip(coords_list, box_vectors_list)
+    iterator = zip(coords_list, box_vectors_list, strict=False)
     if show_progress:
         iterator = tqdm(
             iterator,
