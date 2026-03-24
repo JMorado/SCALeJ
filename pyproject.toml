@@ -114,8 +114,7 @@ pydantic-units = "*"
 [tool.pixi.pypi-dependencies]
 scalej = { path = ".", editable = true }
 smee = { git = "https://github.com/openforcefield/smee.git" }
-# descent = { git = "https://github.com/openforcefield/descent.git" }
-descent = { path = "/home/joaomorado/repos/descent-myfork", editable = true }
+descent = { git = "https://github.com/jmorado/descent.git", branch = "feature_periodic_systems" }
 
 [tool.pixi.feature.cu12]
 platforms = ["linux-64"]
