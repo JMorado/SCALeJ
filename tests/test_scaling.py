@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from scalej.data._scaling import (
+from scalej.scaling import (
     compute_molecule_coms,
     create_scaled_configurations,
     generate_scale_factors,
@@ -11,7 +11,7 @@ from scalej.data._scaling import (
     scale_molecule_positions,
 )
 
-from ..conftest import BOX, N_ATOMS_PER_MOL, WATER_DIMER_COORDS
+from .conftest import N_ATOMS_PER_MOL
 
 
 class TestGenerateScaleFactors:
@@ -20,11 +20,14 @@ class TestGenerateScaleFactors:
         close_range = (0.75, 0.9, 5)
         equilibrium_range = (0.9, 1.1, 15)
         long_range = (1.1, 2.0, 12)
-        return generate_scale_factors(
+        from scalej.config import ScalingConfig
+
+        config = ScalingConfig(
             close_range=close_range,
             equilibrium_range=equilibrium_range,
             long_range=long_range,
         )
+        return generate_scale_factors(config=config)
 
     def test_default_output_type(self, scale_factors):
         assert isinstance(scale_factors, np.ndarray)

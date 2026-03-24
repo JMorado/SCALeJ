@@ -3,34 +3,29 @@
 import numpy as np
 import smee
 
-from ..types import ScalingResult
+from .config import ScalingConfig
+from .types import ScalingResult
 
 
 def generate_scale_factors(
-    close_range: tuple[float, float, int] = (0.75, 0.9, 5),
-    equilibrium_range: tuple[float, float, int] = (0.9, 1.1, 15),
-    long_range: tuple[float, float, int] = (1.1, 2.0, 12),
+    config: ScalingConfig,
 ) -> np.ndarray:
     """
     Generate scale factors for density variation.
 
     Parameters
     ----------
-    close_range : tuple[float, float, int]
-        (start, end, n_points) for close-range scaling (compressed).
-    equilibrium_range : tuple[float, float, int]
-        (start, end, n_points) for equilibrium-range scaling.
-    long_range : tuple[float, float, int]
-        (start, end, n_points) for long-range scaling (expanded).
+    config : ScalingConfig
+        Configuration object containing close, equilibrium, and long range scaling parameters.
 
     Returns
     -------
     np.ndarray
         Array of scale factors spanning all regions.
     """
-    close = np.linspace(*close_range)
-    equilibrium = np.linspace(*equilibrium_range)
-    long = np.linspace(*long_range)
+    close = np.linspace(*config.close_range)
+    equilibrium = np.linspace(*config.equilibrium_range)
+    long = np.linspace(*config.long_range)
     scale_factors = np.concatenate((close, equilibrium[1:], long[1:]))
     return scale_factors
 

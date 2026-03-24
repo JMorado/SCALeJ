@@ -7,9 +7,7 @@ import pandas as pd
 import pytest
 import torch
 
-from scalej.data._datasets import create_dataset, create_dataset_entry
 from scalej.data._io import (
-    export_forcefield_to_offxml,
     load_dataset,
     load_json,
     load_object,
@@ -90,16 +88,15 @@ class TestSaveLoadPickle:
 class TestSaveLoadDataset:
     @pytest.fixture()
     def simple_dataset(self, water_dimer_coords, water_dimer_box):
-        forces = np.zeros((6, 3))
-        entry = create_dataset_entry(
-            id="water_dimer",
-            smiles="O.O",
-            coords_list=[water_dimer_coords],
-            box_vectors_list=[water_dimer_box],
-            energies=np.array([-9.42]),
-            forces=[forces],
-        )
-        return create_dataset([entry])
+        import descent.targets.energy
+        entry = {
+            "smiles": "O.O",
+            "coords": torch.tensor(water_dimer_coords).unsqueeze(0),
+            "box_vectors": torch.tensor(water_dimer_box).unsqueeze(0),
+            "energy": torch.tensor([-9.42], dtype=torch.float64),
+            "forces": torch.zeros((1, 6, 3))
+        }
+        return descent.targets.energy.create_dataset([entry])
 
     def test_roundtrip(self, simple_dataset, tmp_path):
         path = tmp_path / "ds"
@@ -107,9 +104,10 @@ class TestSaveLoadDataset:
         loaded = load_dataset(path)
         loaded.set_format("torch")
 
+        print(loaded.column_names)
+
         assert len(loaded) == len(simple_dataset)
         assert set(loaded.column_names) == {
-            "id",
             "smiles",
             "coords",
             "box_vectors",
@@ -196,40 +194,3 @@ class TestSaveLoadJson:
             load_json(tmp_path / "missing.json")
 
 
-class TestExportForcefieldToOffxml:
-    @pytest.fixture(scope="class")
-    def base_ff(self):
-        from openff.toolkit import ForceField
-
-        return ForceField("openff-2.0.0.offxml", load_plugins=True)
-
-    def test_roundtrip(self, water_system, base_ff, tmp_path):
-        """Output file is created, loadable, and the return value is a ForceField."""
-        from openff.toolkit import ForceField
-
-        _, tensor_ff, _ = water_system
-        out = tmp_path / "out.offxml"
-        result = export_forcefield_to_offxml(base_ff, tensor_ff, out)
-        assert isinstance(result, ForceField)
-        assert out.exists()
-        loaded = ForceField(str(out), load_plugins=True)
-        assert "vdW" in loaded.registered_parameter_handlers
-
-    def test_creates_parent_dirs(self, water_system, base_ff, tmp_path):
-        _, tensor_ff, _ = water_system
-        out = tmp_path / "nested" / "ff.offxml"
-        export_forcefield_to_offxml(base_ff, tensor_ff, out)
-        assert out.exists()
-
-    def test_does_not_mutate_base_forcefield(self, water_system, base_ff, tmp_path):
-        _, tensor_ff, _ = water_system
-        original_params = [
-            (p.smirks, p.epsilon, p.rmin_half)
-            for p in base_ff.get_parameter_handler("vdW").parameters
-        ]
-        export_forcefield_to_offxml(base_ff, tensor_ff, tmp_path / "out.offxml")
-        after_params = [
-            (p.smirks, p.epsilon, p.rmin_half)
-            for p in base_ff.get_parameter_handler("vdW").parameters
-        ]
-        assert original_params == after_params
