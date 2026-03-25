@@ -134,7 +134,7 @@ class TestPrepareEntryData:
             "mean",
             normalize=True,
         )
-        assert forces_var.item() == pytest.approx(0.05368128988823037, rel=1e-5)
+        assert forces_var.item() == pytest.approx(0.21472515165805817, rel=1e-5)
 
     def test_energy_cutoff_filters_high_energy_conformers(
         self, condensed_dataset, condensed_topologies

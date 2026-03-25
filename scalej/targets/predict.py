@@ -79,14 +79,14 @@ def predict_energies_forces(
         else:
             box_vectors_all = None
 
-        # Normalize by number of molecules.
+        # Normalize energy by number of molecules (energy is extensive).
+        # Forces are per-atom quantities and are not normalized.
         if isinstance(topology, smee.TensorSystem):
             n_mols = sum(topology.n_copies)
         else:
             n_mols = 1
 
         energy_ref = energy_ref / n_mols
-        forces_ref = forces_ref / n_mols
 
         # Save full (pre-filter) arrays.
         energy_ref_full = energy_ref.clone()
@@ -209,7 +209,7 @@ def predict_energies_forces(
             grad_energy = torch.autograd.grad(
                 energy.sum(), coords_grad, create_graph=False, retain_graph=False
             )[0]
-            forces_pred = -grad_energy.detach() / n_mols
+            forces_pred = -grad_energy.detach()
             forces_preds_entry.append(forces_pred)
 
         energy_preds_stack = torch.stack(energy_preds_entry)

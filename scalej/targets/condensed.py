@@ -75,14 +75,14 @@ def _prepare_entry_data(
     )
     forces_all = entry["forces"].reshape(n_confs, -1, 3)
 
-    # Per-molecule normalization.
+    # Per-molecule normalization (energy is extensive; forces are per-atom
+    # and are NOT divided by n_mols).
     if normalize and isinstance(topology, smee.TensorSystem):
         n_mols = sum(topology.n_copies)
     else:
         n_mols = 1
 
     energy_ref = energy_ref / n_mols
-    forces_all = forces_all / n_mols
 
     # Save pre-filter arrays. These are needed needed for "min"/"infinite"
     # reference which index the original array, and for saving ref conformer coords.
@@ -370,7 +370,9 @@ def _compute_batch_loss(
             )
     if force_weight > 0:
         for k, j in enumerate(range(batch_slice.start, batch_slice.stop)):
-            grad_coords_j = grads_coords[k]
+            # grads_coords are d(E/n_mols)/dr = (1/n_mols)*dE/dr, but forces
+            # are raw atomic forces (-dE/dr), so multiply grad by n_mols.
+            grad_coords_j = grads_coords[k] * n_mols
             f_ref_j = smee.utils.tensor_like(
                 forces_all[j], forcefield.potentials[0].parameters
             )
@@ -565,9 +567,10 @@ def default_closure(
 
     When ``normalize=True`` the loss matches SCALeJ's normalization:
 
-    * Reference energies and forces are divided by the total number of molecules
+    * Reference energies are divided by the total number of molecules
       in the system (``n_mols = sum(system.n_copies)``).
     * Predicted energies are also divided by ``n_mols``.
+    * Forces are per-atom quantities and are NOT divided by ``n_mols``.
     * Conformer weights are uniform and sum to 1 (``w_i = 1/n_confs``).
     * The energy SSE is divided by ``var(E_ref - E_ref_0)``.
     * The force SSE is divided by ``var(F_ref)``.
