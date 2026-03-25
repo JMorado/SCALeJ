@@ -7,11 +7,7 @@ import numpy as np
 import pytest
 import torch
 
-from scalej.train import run_training_loop
-
-# ---------------------------------------------------------------------------
-# Fixtures: real condensed-phase dataset + trainable
-# ---------------------------------------------------------------------------
+from scalej.train import _collect_losses, run_training_loop
 
 _RNG = np.random.default_rng(42)
 _N_ATOMS = 6
@@ -83,11 +79,6 @@ def real_closure(train_trainable, train_topologies, train_dataset):
     )
 
 
-# ---------------------------------------------------------------------------
-# Synthetic closure for structural tests
-# ---------------------------------------------------------------------------
-
-
 def _make_closure(target: float = 0.0):
     def closure(params, compute_gradient, compute_hessian):
         loss = (params[0] - target) ** 2
@@ -104,11 +95,6 @@ def mock_trainable(mocker):
     trainable = mocker.Mock()
     trainable.clamp = mocker.Mock(side_effect=lambda data: data)
     return trainable
-
-
-# ---------------------------------------------------------------------------
-# Structural tests (synthetic closure)
-# ---------------------------------------------------------------------------
 
 
 def test_returns_loss_list_of_correct_length(mock_trainable):
@@ -173,11 +159,6 @@ def test_last_losses_attribute_included_in_log(mock_trainable, caplog):
     assert "energy" in full_log
 
 
-# ---------------------------------------------------------------------------
-# Real-data tests (condensed closure + real Trainable)
-# ---------------------------------------------------------------------------
-
-
 def test_loss_decreases_with_real_data(real_closure, train_trainable):
     params = train_trainable.to_values().detach().requires_grad_(True)
     losses = run_training_loop(
@@ -220,3 +201,84 @@ def test_all_losses_are_non_negative_with_real_data(real_closure, train_trainabl
         params, real_closure, train_trainable, n_epochs=10, lr=0.01
     )
     assert all(v >= 0.0 for v in losses)
+
+
+def test_collect_losses_plain_closure():
+    """A plain closure with last_losses returns them directly."""
+
+    def closure(params, compute_gradient, compute_hessian):
+        return torch.tensor(1.0), None, None
+
+    closure.last_losses = {"energy": 0.5, "forces": 0.3}
+    result = _collect_losses(closure)
+    assert result == {"energy": 0.5, "forces": 0.3}
+
+
+def test_collect_losses_no_attribute():
+    """A closure without last_losses returns an empty dict."""
+
+    def closure(params, compute_gradient, compute_hessian):
+        return torch.tensor(1.0), None, None
+
+    result = _collect_losses(closure)
+    assert result == {}
+
+
+def test_collect_losses_combined_closure():
+    """_collect_losses surfaces per-sub-closure last_losses via combine_closures."""
+    import descent.utils.loss
+
+    def sub_a(params, compute_gradient, compute_hessian):
+        loss = params.sum()
+        return loss.detach(), None, None
+
+    sub_a.last_losses = {"energy": 0.2, "forces": 0.1}
+
+    def sub_b(params, compute_gradient, compute_hessian):
+        loss = params.sum() * 2
+        return loss.detach(), None, None
+
+    sub_b.last_losses = {"energy": 0.4, "forces": 0.3}
+
+    combined = descent.utils.loss.combine_closures(
+        {"target_a": sub_a, "target_b": sub_b}
+    )
+    # Trigger one call so combine_closures populates its own last_losses.
+    combined(torch.tensor([1.0]), compute_gradient=False, compute_hessian=False)
+
+    result = _collect_losses(combined)
+    assert "target_a/energy" in result
+    assert "target_a/forces" in result
+    assert "target_b/energy" in result
+    assert "target_b/forces" in result
+    assert result["target_a/energy"] == pytest.approx(0.2)
+    assert result["target_b/forces"] == pytest.approx(0.3)
+
+
+def test_collect_losses_combined_no_sub_losses():
+    """When sub-closures have no last_losses, falls back to top-level keys."""
+    import descent.utils.loss
+
+    def sub(params, compute_gradient, compute_hessian):
+        loss = params.sum()
+        return loss.detach(), None, None
+
+    combined = descent.utils.loss.combine_closures({"condensed": sub}, verbose=True)
+    combined(torch.tensor([1.0]), compute_gradient=False, compute_hessian=False)
+
+    result = _collect_losses(combined)
+    assert "condensed" in result
+
+
+def test_energy_force_breakdown_logged_with_real_data(
+    real_closure, train_trainable, caplog
+):
+    """The condensed closure populates last_losses with energy and forces."""
+    params = train_trainable.to_values().detach().requires_grad_(True)
+    with caplog.at_level(logging.INFO, logger="scalej.train"):
+        run_training_loop(
+            params, real_closure, train_trainable, n_epochs=3, lr=0.01, log_every=1
+        )
+    full_log = " ".join(r.message for r in caplog.records)
+    assert "energy" in full_log
+    assert "forces" in full_log

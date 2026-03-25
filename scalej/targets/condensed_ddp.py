@@ -76,6 +76,8 @@ def _ddp_worker(
         params = params_snapshot.detach().clone().to(device).requires_grad_(True)
 
         total_loss = torch.zeros(1, device=device)
+        total_energy_loss = torch.zeros(1, device=device)
+        total_force_loss = torch.zeros(1, device=device)
         accum_grad: torch.Tensor | None = None
         n_processed = 0
 
@@ -103,20 +105,24 @@ def _ddp_worker(
                 entry_iterator.set_description(f"mixture:{mixture_id}")
             topology = topologies_dev[mixture_id]
 
-            entry_loss, entry_grad, _, _ = _process_entry(
-                entry,
-                topology,
-                local_trainable,
-                params,
-                reference,
-                energy_weight,
-                force_weight,
-                batch_size,
-                normalize,
-                compute_gradient=True,
-                energy_cutoff=energy_cutoff,
+            entry_loss, entry_grad, entry_energy_loss, entry_force_loss = (
+                _process_entry(
+                    entry,
+                    topology,
+                    local_trainable,
+                    params,
+                    reference,
+                    energy_weight,
+                    force_weight,
+                    batch_size,
+                    normalize,
+                    compute_gradient=True,
+                    energy_cutoff=energy_cutoff,
+                )
             )
             total_loss = total_loss + entry_loss
+            total_energy_loss = total_energy_loss + entry_energy_loss
+            total_force_loss = total_force_loss + entry_force_loss
             if entry_grad is not None:
                 if accum_grad is None:
                     accum_grad = entry_grad
@@ -129,7 +135,13 @@ def _ddp_worker(
             if accum_grad is not None
             else torch.zeros_like(params_snapshot)
         )
-        results[rank] = (total_loss.item(), n_processed, grad_cpu)
+        results[rank] = (
+            total_loss.item(),
+            n_processed,
+            grad_cpu,
+            total_energy_loss.item(),
+            total_force_loss.item(),
+        )
 
     except Exception:
         _tb.print_exc()
@@ -275,6 +287,11 @@ def ddp_closure(
                 torch.stack([r[2] for r in results]).sum(dim=0).to(params.device)
                 / denom
             )
+
+        closure_fn.last_losses = {
+            "energy": sum(r[3] for r in results) / denom,
+            "forces": sum(r[4] for r in results) / denom,
+        }
 
         return avg_loss, avg_grad, None
 
