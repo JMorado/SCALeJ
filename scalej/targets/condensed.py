@@ -6,11 +6,68 @@ import datasets
 import descent.train
 import descent.utils.loss
 import smee
+import smee.geometry
 import smee.utils
 import torch
 from tqdm.auto import tqdm
 
 ReferenceMode = Literal["mean", "min", "none", "infinite"]
+
+
+def _add_v_site_coords(
+    topology: smee.TensorTopology | smee.TensorSystem,
+    conformer: torch.Tensor,
+    force_field: smee.TensorForceField,
+) -> torch.Tensor:
+    """
+    Insert virtual-site coordinates into an atom-only conformer.
+
+    The dataset stores only atomic coordinates.  smee's ``compute_energy``
+    expects a conformer that includes vsite positions (appended after the
+    atoms of each molecule copy).  This helper reshapes the flat atom-only
+    conformer, calls ``smee.geometry.add_v_site_coords`` per topology type,
+    and returns the full particle conformer.  All operations are
+    differentiable, so ``autograd.grad(energy, atom_coords)`` correctly
+    projects vsite forces back onto atoms.
+
+    Parameters
+    ----------
+    topology
+        The topology (single molecule or full periodic system).
+    conformer
+        Atom-only coordinates with ``shape=(n_atoms_total, 3)``.
+    force_field
+        The force field (needed to evaluate vsite frame weights).
+
+    Returns
+    -------
+    torch.Tensor
+        Full particle conformer ``shape=(n_particles_total, 3)`` where
+        vsites are interleaved immediately after the atoms of each molecule
+        copy.
+    """
+    if isinstance(topology, smee.TensorTopology):
+        if topology.n_v_sites == 0:
+            return conformer
+        return smee.geometry.add_v_site_coords(topology.v_sites, conformer, force_field)
+
+    # TensorSystem: handle each topology type in turn.
+    chunks: list[torch.Tensor] = []
+    idx_atom = 0
+    for mol_top, n_copies in zip(topology.topologies, topology.n_copies, strict=True):
+        n_atoms = mol_top.n_atoms
+        mol_coords = conformer[idx_atom : idx_atom + n_copies * n_atoms].reshape(
+            n_copies, n_atoms, 3
+        )
+        if mol_top.n_v_sites > 0:
+            mol_full = smee.geometry.add_v_site_coords(
+                mol_top.v_sites, mol_coords, force_field
+            )  # (n_copies, n_atoms + n_vsites, 3)
+        else:
+            mol_full = mol_coords
+        chunks.append(mol_full.reshape(-1, 3))
+        idx_atom += n_copies * n_atoms
+    return torch.cat(chunks, dim=0)
 
 
 def _prepare_entry_data(
@@ -217,11 +274,12 @@ def _compute_reference_prediction(
         if ref_box_vectors is not None
         else None
     )
+    full_coords_pred_0 = _add_v_site_coords(topology, coords_pred_0, forcefield)
     e_pred_0 = (
         smee.compute_energy(
             topology,
             forcefield,
-            coords_pred_0,
+            full_coords_pred_0,
             box_vectors=box_vectors_pred_0,
         ).squeeze()
         / n_mols
@@ -333,10 +391,18 @@ def _compute_batch_loss(
         for j in range(batch_slice.start, batch_slice.stop)
     ]
 
+    # Add virtual-site coordinates (atom-only coords from dataset must be extended
+    # to full particle coords before calling smee.compute_energy).  The operation is
+    # differentiable, so autograd.grad(energy, coords_batch) correctly projects
+    # vsite forces back onto atom coordinates.
+    full_coords_batch = [
+        _add_v_site_coords(topology, c, forcefield) for c in coords_batch
+    ]
+
     # Compute predicted energies for the batch.
     energies_pred_batch = [
-        smee.compute_energy(topology, forcefield, c, bv).squeeze() / n_mols
-        for c, bv in zip(coords_batch, box_vectors_batch, strict=True)
+        smee.compute_energy(topology, forcefield, c_full, bv).squeeze() / n_mols
+        for c_full, bv in zip(full_coords_batch, box_vectors_batch, strict=True)
     ]
 
     # Compute forces first (before building the energy-loss graph) so that when
@@ -399,7 +465,13 @@ def _compute_batch_loss(
         )
         batch_grad = batch_grad.detach()
 
-    del forcefield, coords_batch, box_vectors_batch, energies_pred_batch
+    del (
+        forcefield,
+        coords_batch,
+        full_coords_batch,
+        box_vectors_batch,
+        energies_pred_batch,
+    )
     if force_weight > 0:
         del energy_sum, grads_coords
 

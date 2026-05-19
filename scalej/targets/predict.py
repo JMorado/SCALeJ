@@ -5,8 +5,11 @@ from typing import Optional
 
 import datasets
 import smee
+import smee.geometry
 import torch
 from tqdm.auto import tqdm
+
+from .condensed import _add_v_site_coords
 
 LOGGER = logging.getLogger(__name__)
 
@@ -150,8 +153,9 @@ def predict_energies_forces(
                     ref_box_vectors, force_field.potentials[0].parameters
                 )
 
+            full_ref_coords = _add_v_site_coords(topology, ref_coords, force_field)
             e_pred_0 = smee.compute_energy(
-                topology, force_field, ref_coords, ref_box_vectors
+                topology, force_field, full_ref_coords, ref_box_vectors
             )
             e_pred_0 = (e_pred_0.squeeze() / n_mols).detach()
 
@@ -195,19 +199,23 @@ def predict_energies_forces(
                 )
 
             # Compute energy
+            full_coords = _add_v_site_coords(topology, coords, force_field)
             energy_pred = smee.compute_energy(
-                topology, force_field, coords, box_vectors
+                topology, force_field, full_coords, box_vectors
             )
             energy_pred = (energy_pred.squeeze() / n_mols).detach()
             energy_preds_entry.append(energy_pred)
 
-            # Compute forces
-            coords_grad = coords.detach().requires_grad_(True)
+            # Compute forces (differentiably through vsite placement)
+            atom_coords_grad = coords.detach().requires_grad_(True)
+            full_coords_grad = _add_v_site_coords(
+                topology, atom_coords_grad, force_field
+            )
             energy = smee.compute_energy(
-                topology, force_field, coords_grad, box_vectors
+                topology, force_field, full_coords_grad, box_vectors
             )
             grad_energy = torch.autograd.grad(
-                energy.sum(), coords_grad, create_graph=False, retain_graph=False
+                energy.sum(), atom_coords_grad, create_graph=False, retain_graph=False
             )[0]
             forces_pred = -grad_energy.detach()
             forces_preds_entry.append(forces_pred)
