@@ -6,6 +6,7 @@ import smee
 import smee.converters
 from openff.interchange import Interchange
 from openff.toolkit import ForceField, Molecule
+from openff.toolkit.utils.toolkits import RDKitToolkitWrapper
 
 
 def create_system_from_smiles(
@@ -32,7 +33,17 @@ def create_system_from_smiles(
         The tensor system, force field, and list of topologies.
     """
     force_field = ForceField(forcefield_name, load_plugins=True)
-    mols = [Molecule.from_smiles(smiles) for smiles in smiles_list]
+
+    # Force RDKit for SMILES parsing: OpenEye places the explicit H from [C@H]
+    # at an intermediate atom index, mismatching the heavy-atoms-first ordering
+    # used in the dataset.  RDKit always appends H atoms at the end.
+    _rdkit = RDKitToolkitWrapper()
+    mols = [
+        Molecule.from_smiles(
+            smiles, allow_undefined_stereo=True, toolkit_registry=_rdkit
+        )
+        for smiles in smiles_list
+    ]
 
     # Optionally assign charges using the provided callback.
     if charge_assignment_callback is not None:
